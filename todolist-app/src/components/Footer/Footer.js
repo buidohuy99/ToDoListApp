@@ -6,8 +6,8 @@ export default function Footer() {
     return (
       <Typography variant="body2" color="textSecondary" align="center">
         {'Copyright © '}
-        <Link color="inherit" href="#">
-          Retro app
+        <Link color="inherit" href="/">
+          To do list
         </Link>{' '}
         {new Date().getFullYear()}
         {'.'}

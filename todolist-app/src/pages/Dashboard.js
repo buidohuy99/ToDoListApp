@@ -1,5 +1,7 @@
 export function Dashboard({}){
-    return (<div>
-        This is dashboard
-    </div>);
+    return (
+        <div style={{
+            backgroundColor: 'red'
+        }}> This is dashboard content</div>
+    );
 }

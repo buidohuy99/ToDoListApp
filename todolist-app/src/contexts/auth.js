@@ -12,7 +12,7 @@ const AuthAxios = axios.create({
   
 const updateAccessToken = async () => {
     try{
-      const {Token} = (await AuthAxios.post(process.env.REACT_APP_API_URL + '/authentication/refresh-token')).data;
+      const {Token} = (await AuthAxios.post(process.env.REACT_APP_API_URL + '/main-business/v1/authentication/refresh-token')).data;
       localStorage.setItem(accesstoken_keyname, Token);
       return Token;
     }catch(e){
@@ -34,7 +34,7 @@ const default_request_interceptor = AuthAxios.interceptors.request.use(
         const { origin } = new URL(config.url);
         const allowedOrigins = [process.env.REACT_APP_API_URL];
         const access_token = localStorage.getItem(accesstoken_keyname);
-        if (allowedOrigins.includes(origin) && access_token && access_token !== 'null') {
+        if (allowedOrigins.includes(origin) && access_token && access_token !== 'null') {    
             config.headers['Authorization'] = `Bearer ${access_token}`;
         }
         return config;
@@ -105,9 +105,9 @@ export function AuthProvider({children}){
           let existingToken = localStorage.getItem(accesstoken_keyname);
           if(existingToken && existingToken !== 'null'){
             try{    
-                // vvvvv Check if access token is valid. if not valid will try to refresh the token => if refresh is successful, access token inside storage will automatically update. Otherwise, will throw an error vvvvvvvvv
-                await AuthAxios.post(process.env.REACT_APP_API_URL + '/authentication/check-token-valid');
                 existingToken = localStorage.getItem(accesstoken_keyname);
+                // vvvvv Check if access token is valid. if not valid will try to refresh the token => if refresh is successful, access token inside storage will automatically update. Otherwise, will throw an error vvvvvvvvv
+                await AuthAxios.post(process.env.REACT_APP_API_URL + '/main-business/v1/authentication/check-token-valid');            
                 setToken(existingToken);
             }catch(err){
                 setToken(null);

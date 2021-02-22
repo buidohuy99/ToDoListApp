@@ -11,7 +11,7 @@ export default function NotFoundPage(){
             display: 'flex',
             justifyContent: 'center',
         }}>
-            <Grid container item xs={12} justify="center">
+            <Grid container item xs={12}>
                 <div className="face">
                     <div className="band">
                         <div className="red"></div>
@@ -24,14 +24,13 @@ export default function NotFoundPage(){
                 </div>
             </Grid>
             <Grid container item xs={12} justify="center">
-                <h1>404 page not found</h1>
+                <h1>404 NOT FOUND</h1>
             </Grid>
             <Grid container item xs={12} justify="center">
                 <Button component={Link} to="/" type="submit"
                     variant="contained"
-                    color="primary"
-                >
-                    Về trang chủ
+                    color="primary">
+                    Back to index
                 </Button>
             </Grid>        
         </Grid>

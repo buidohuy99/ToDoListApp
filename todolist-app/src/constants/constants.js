@@ -1,0 +1,1 @@
+export const NAVIGATION_DRAWER_WIDTH = 240;
