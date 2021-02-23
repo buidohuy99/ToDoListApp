@@ -43,15 +43,17 @@ const useStyles = makeStyles((theme) => ({
       transition: theme.transitions.create(['margin', 'width'], {
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.leavingScreen,
-      }),
+      })
     },
     appBarShift: {
-      width: `calc(100% - ${NAVIGATION_DRAWER_WIDTH}px)`,
-      marginLeft: NAVIGATION_DRAWER_WIDTH,
-      transition: theme.transitions.create(['margin', 'width'], {
-        easing: theme.transitions.easing.easeOut,
-        duration: theme.transitions.duration.enteringScreen,
-      }),
+      [theme.breakpoints.up('sm')]:{
+        width: `calc(100% - ${NAVIGATION_DRAWER_WIDTH}px)`,
+        marginLeft: NAVIGATION_DRAWER_WIDTH,
+        transition: theme.transitions.create(['margin', 'width'], {
+          easing: theme.transitions.easing.easeOut,
+          duration: theme.transitions.duration.enteringScreen,
+        }),
+      }
     },
   }));
 
@@ -81,18 +83,19 @@ export default function DefaultAppBar() {
         history.push("/profile");
     };
 
-    const [navigationPanelOpenState, setNavBarOpen] = useState(Boolean(useSelector((state) => state.navigation.isNavigationOpened)));
+    const navigationPanelOpenState = Boolean(useSelector((state) => state.navigation.isNavigationOpened));
+    const loadingPrompt = useSelector((state) => state.loading.loadingPrompt);
 
     const dispatch = useDispatch();
 
     return (
-      <AppBar position="relative" className={clsx(classes.appBar, {
-        [classes.appBarShift]: navigationPanelOpenState && access_token != null,
+      <AppBar position="sticky" className={clsx(classes.appBar, {
+        [classes.appBarShift]: navigationPanelOpenState,
       })}>
         <Toolbar>  
           <Grid container alignItems="center" justify="center" spacing={2}>
             <Grid item style={{
-              display: access_token ? 'block' : 'none'
+              display: access_token && loadingPrompt === null ? 'block' : 'none'
             }}>
               <IconButton
                 className={classes.navigationDrawerButton}
@@ -102,7 +105,6 @@ export default function DefaultAppBar() {
                   dispatch(
                     setNavigationOpenState(!navigationPanelOpenState)
                   );
-                  setNavBarOpen(!navigationPanelOpenState);
                 }}
                 edge="start"
               >
@@ -124,7 +126,9 @@ export default function DefaultAppBar() {
             </Grid>
             <Grid item>
               {access_token ? (
-                <div>
+                <Grid style={{
+                  display: loadingPrompt === null ? 'block' : 'none'
+                }}>
                   <IconButton
                     onClick={handleMenu}
                     aria-label="account of current user"
@@ -152,7 +156,7 @@ export default function DefaultAppBar() {
                     <MenuItem onClick={handleProfile}>Profile</MenuItem>
                     <MenuItem onClick={handleLogOut}>Log Out</MenuItem>
                   </Menu>
-                </div>
+                </Grid>
               ) : (
                 <Grid container item justify="center" spacing={2}>
                   <Grid item>

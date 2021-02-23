@@ -10,20 +10,22 @@ import { Login } from './pages/Login';
 
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
+import DrawerContent from './components/Drawer/DrawerContent';
 
 import NotFoundPage from './pages/NotFoundPage';
 
 import { ThemeProvider } from '@material-ui/styles';
 import { theme as pageTheme } from './themes/WebsiteThemePalette';
 
-import { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { CssBaseline, Drawer, Hidden, IconButton, Divider, List, ListItem, ListItemText, ListItemIcon } from '@material-ui/core';
+import { useSelector, useDispatch } from 'react-redux';
+import { CssBaseline, Drawer, CircularProgress, IconButton, Divider, Backdrop, Grid, Typography } from '@material-ui/core';
 import { makeStyles, useTheme } from "@material-ui/core";
 
-import {ChevronLeft, ChevronRight, Inbox as InboxIcon, Mail as MailIcon } from '@material-ui/icons';
+import {ChevronLeft, ChevronRight } from '@material-ui/icons';
 
 import {NAVIGATION_DRAWER_WIDTH} from './constants/constants';
+
+import {setNavigationOpenState} from './redux/navigation/navigationSlice';
 
 const useStyles = makeStyles((theme) => ({
   content: {
@@ -34,18 +36,38 @@ const useStyles = makeStyles((theme) => ({
         duration: theme.transitions.duration.leavingScreen,
     }),
     marginLeft: 0,
+    height: "100%"
   },
   contentShift: {
+    [theme.breakpoints.up('sm')]:{
+      transition: theme.transitions.create('margin', {
+          easing: theme.transitions.easing.easeOut,
+          duration: theme.transitions.duration.enteringScreen,
+      }),
+      marginLeft: NAVIGATION_DRAWER_WIDTH,
+    }
+  },
+  footer: {
+    padding: theme.spacing(3),
     transition: theme.transitions.create('margin', {
-        easing: theme.transitions.easing.easeOut,
-        duration: theme.transitions.duration.enteringScreen,
+        easing: theme.transitions.easing.sharp,
+        duration: theme.transitions.duration.leavingScreen,
     }),
-    marginLeft: NAVIGATION_DRAWER_WIDTH,
+    marginLeft: 0
+  },
+  footerShift: {
+    [theme.breakpoints.up('sm')]:{
+      transition: theme.transitions.create('margin', {
+          easing: theme.transitions.easing.easeOut,
+          duration: theme.transitions.duration.enteringScreen,
+      }),
+      marginLeft: NAVIGATION_DRAWER_WIDTH,
+    }
   },
   drawer: {
     [theme.breakpoints.up('sm')]: {
-        width: NAVIGATION_DRAWER_WIDTH,
-        flexShrink: 0,
+      width: NAVIGATION_DRAWER_WIDTH,
+      flexShrink: 0,
     },
   },
   drawerHeader: {
@@ -59,90 +81,91 @@ const useStyles = makeStyles((theme) => ({
   drawerPaper: {
     width: NAVIGATION_DRAWER_WIDTH,
   },
+  toolbar: theme.mixins.toolbar,
 }));
 
 function App() {
   const classes = useStyles();
   const theme = useTheme();
   const {access_token} = useAuth();
+  const dispatch = useDispatch();
 
-  const drawer = (
-      <div>
-          <List>
-          {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
-              <ListItem button key={text}>
-              <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
-              <ListItemText primary={text} />
-              </ListItem>
-          ))}
-          </List>
-          <Divider />
-          <List>
-          {['All mail', 'Trash', 'Spam'].map((text, index) => (
-              <ListItem button key={text}>
-              <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
-              <ListItemText primary={text} />
-              </ListItem>
-          ))}
-          </List>
-      </div>
-  );
-
-  const [isDrawerOpen, setDrawerOpen] = useState(Boolean(useSelector((state) => state.navigation.isNavigationOpened)));
+  const isDrawerOpen = Boolean(useSelector((state) => state.navigation.isNavigationOpened));
+  const loadingPrompt = useSelector((state) => state.loading.loadingPrompt);
 
   return (
     <ThemeProvider theme={pageTheme}>
       <BrowserRouter>
-          <CssBaseline/>
-          <Header/>
-          {
-            access_token ?
-            <Hidden xsDown>
-              <nav className={classes.drawer} aria-label="navigations">
-                <Drawer variant="temporary" open={isDrawerOpen} classes={{
-                    paper: classes.drawerPaper,
+        <Header/>
+        <CssBaseline/>
+        {
+          access_token ?
+          <nav className={classes.drawer} aria-label="navigations">
+            <Drawer open={isDrawerOpen} classes={{
+                paper: classes.drawerPaper,
+            }}>
+              <div className={classes.drawerHeader}> 
+                <IconButton onClick={() => {
+                  dispatch(
+                    setNavigationOpenState(!isDrawerOpen)
+                  );
                 }}>
-                  <div className={classes.drawerHeader}> 
-                    <IconButton onClick={() => {
-                      setDrawerOpen(false);
-                    }}>
-                      {theme.direction === 'ltr' ? <ChevronLeft /> : <ChevronRight />}
-                    </IconButton>
-                  </div>
-                  <Divider />
-                  {drawer}
-                </Drawer>
-              </nav>
-            </Hidden> : null
-          }
-          <main className={clsx(classes.content, {
-            [classes.contentShift]: isDrawerOpen && access_token != null,
-          })}>
-            <Switch>
-              <PrivateRoute exact path='/'>
-                <Dashboard/>
-              </PrivateRoute>
+                  {theme.direction === 'ltr' ? <ChevronLeft /> : <ChevronRight />}
+                </IconButton>
+              </div>
+              <Divider />
+              <DrawerContent/>
+            </Drawer>
+          </nav> : null
+        }
+        <main className={clsx(classes.content, {
+          [classes.contentShift]: isDrawerOpen,
+        })}>
+          <Switch>
+            <PrivateRoute exact path='/'>
+              <Dashboard/>
+            </PrivateRoute>
 
-              <AuthRoute exact path='/login'>
-                <Login/>
-              </AuthRoute>
+            <AuthRoute exact path='/login'>
+              <Login/>
+            </AuthRoute>
 
-              <Route exact path='/test/dashboard'>
-                <Dashboard/>
-              </Route>
+            <Route exact path='/test/dashboard'>
+              <Dashboard/>
+            </Route>
 
-              <Route component={NotFoundPage}/>
-            </Switch>
-          </main>
+            <Route component={NotFoundPage}/>
+          </Switch>
+        </main>
 
-          <footer className={clsx(classes.content, {
-            [classes.contentShift]: isDrawerOpen && access_token != null,
-          })} style={{
-            backgroundColor: 'yellow'
-          }}>
-            <Footer />
-          </footer>
-        </BrowserRouter>
+        <footer className={clsx(classes.footer, {
+          [classes.footerShift]: isDrawerOpen,
+        })} style={{
+          backgroundColor: 'yellow'
+        }}>
+          <Footer />
+        </footer>
+
+        <Backdrop
+          open={loadingPrompt !== null}
+          style={{ color: "#fff", zIndex: 100 }}
+        >
+          <Grid container item justify="center">
+            <Grid container item xs={12} className={classes.toolbar}>
+            </Grid>
+            <Grid container item xs={12} justify="center" style={{
+              marginBottom: 15,
+            }}>
+              <CircularProgress color="inherit" />
+            </Grid>
+            <Grid container item xs={12} justify="center">
+              <Typography variant="body1" style={{ color: "white" }}>
+                {loadingPrompt}
+              </Typography>
+            </Grid>
+          </Grid>
+        </Backdrop>
+      </BrowserRouter>
     </ThemeProvider>
   );
 }

@@ -1,6 +1,9 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
+import { useDispatch } from 'react-redux';
+import { setLoadingPrompt } from '../redux/loading/loadingSlice';
+
 export const accesstoken_keyname = process.env.REACT_APP_ACCESSTOKEN_KEYNAME;
 export const refreshtoken_keyname = process.env.REACT_APP_REFRESHTOKEN_KEYNAME;
 
@@ -85,6 +88,7 @@ export function useAuth() {
 
 export function AuthProvider({children}){
     const [accessToken, setAccessToken] = useState(localStorage.getItem(accesstoken_keyname));
+    const dispatch = useDispatch();
 
     const setToken = (data) => {
         if(data){
@@ -104,6 +108,7 @@ export function AuthProvider({children}){
         (async() => {
           let existingToken = localStorage.getItem(accesstoken_keyname);
           if(existingToken && existingToken !== 'null'){
+            dispatch(setLoadingPrompt("Checking your login credentials, please wait..."));
             try{    
                 existingToken = localStorage.getItem(accesstoken_keyname);
                 // vvvvv Check if access token is valid. if not valid will try to refresh the token => if refresh is successful, access token inside storage will automatically update. Otherwise, will throw an error vvvvvvvvv
@@ -112,6 +117,7 @@ export function AuthProvider({children}){
             }catch(err){
                 setToken(null);
             }
+            dispatch(setLoadingPrompt(null));
           } else {
             setToken(null);
           }
