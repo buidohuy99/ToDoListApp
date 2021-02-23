@@ -1,6 +1,6 @@
 import React from 'react';
 
-import '../css/NotFoundPage.scss';
+import '../css/global.scss';
 
 import {Link} from 'react-router-dom';
 import {Button, Grid} from '@material-ui/core';

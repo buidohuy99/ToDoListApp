@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setLoadingPrompt } from '../redux/loading/loadingSlice';
 
 export const accesstoken_keyname = process.env.REACT_APP_ACCESSTOKEN_KEYNAME;
@@ -55,6 +55,7 @@ const default_response_interceptor = AuthAxios.interceptors.response.use(
         const {set_access_token} = useAuth();
 
         error.config.retries = error.config.retries || { count: 0,};
+
         if (isUnAuthorizedError(error) && shouldRetry(error.config)) {
             const new_access = await updateAccessToken(); // refresh the access token
             error.config.retries.count++;
@@ -104,29 +105,36 @@ export function AuthProvider({children}){
         set_access_token: setToken
     };
 
-    useEffect(() => {
+    const currentPage = useSelector((state) => state.navigation.currentPage);
+
+    useEffect(() => { 
         (async() => {
-          let existingToken = localStorage.getItem(accesstoken_keyname);
-          if(existingToken && existingToken !== 'null'){
-            dispatch(setLoadingPrompt("Checking your login credentials, please wait..."));
-            try{    
-                existingToken = localStorage.getItem(accesstoken_keyname);
-                // vvvvv Check if access token is valid. if not valid will try to refresh the token => if refresh is successful, access token inside storage will automatically update. Otherwise, will throw an error vvvvvvvvv
-                await AuthAxios.post(process.env.REACT_APP_API_URL + '/main-business/v1/authentication/check-token-valid');            
-                setToken(existingToken);
-            }catch(err){
-                setToken(null);
+            let existingToken = localStorage.getItem(accesstoken_keyname);
+            if(existingToken && existingToken !== 'null'){
+              dispatch(setLoadingPrompt("Checking your login credentials, please wait..."));
+              try{    
+                  existingToken = localStorage.getItem(accesstoken_keyname);
+                  // vvvvv Check if access token is valid. if not valid will try to refresh the token => if refresh is successful, access token inside storage will automatically update. Otherwise, will throw an error vvvvvvvvv
+                  await AuthAxios.post(process.env.REACT_APP_API_URL + '/main-business/v1/authentication/check-token-valid');            
+                  setToken(existingToken);
+              }catch(err){
+                  setToken(null);
+              }
+              dispatch(setLoadingPrompt(null));
+            } else {
+              setToken(null);
             }
-            dispatch(setLoadingPrompt(null));
-          } else {
-            setToken(null);
-          }
         })();
-    
+
         return () => {
           removeInterceptorForeverFromAxios();
         }
     }, []);
+
+    useEffect(() => {
+        
+        
+    }, [currentPage]);
 
     return <AuthContext.Provider value={value}>
         {children}

@@ -43,7 +43,8 @@ const useStyles = makeStyles((theme) => ({
       transition: theme.transitions.create(['margin', 'width'], {
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.leavingScreen,
-      })
+      }),
+      marginRight: 0,
     },
     appBarShift: {
       [theme.breakpoints.up('sm')]:{
@@ -53,7 +54,7 @@ const useStyles = makeStyles((theme) => ({
           easing: theme.transitions.easing.easeOut,
           duration: theme.transitions.duration.enteringScreen,
         }),
-      }
+      },
     },
   }));
 
@@ -64,15 +65,7 @@ export default function DefaultAppBar() {
     const open = Boolean(anchorEl);
   
     const history = useHistory();
-  
-    const handleMenu = (event) => {
-      setAnchorEl(event.currentTarget);
-    };
-  
-    const handleClose = () => {
-      setAnchorEl(null);
-    };
-  
+
     const handleLogOut = async () => {
         set_access_token(null);
         setAnchorEl(null);
@@ -107,6 +100,8 @@ export default function DefaultAppBar() {
                   );
                 }}
                 edge="start"
+                variant='contained'
+                color='secondary'
               >
                 <MenuIcon/>
               </IconButton>
@@ -126,44 +121,28 @@ export default function DefaultAppBar() {
             </Grid>
             <Grid item>
               {access_token ? (
-                <Grid style={{
+                <Grid container item justify="center" spacing={2} style={{
                   display: loadingPrompt === null ? 'block' : 'none'
                 }}>
-                  <IconButton
-                    onClick={handleMenu}
-                    aria-label="account of current user"
-                    aria-controls="menu-appbar"
-                    aria-haspopup="true"
-                    color="inherit"
-                  >
-                    <AccountCircle />
-                  </IconButton>
-                  <Menu
-                    id="menu-appbar"
-                    anchorEl={anchorEl}
-                    anchorOrigin={{
-                      vertical: "top",
-                      horizontal: "right",
-                    }}
-                    keepMounted
-                    transformOrigin={{
-                      vertical: "top",
-                      horizontal: "right",
-                    }}
-                    open={open}
-                    onClose={handleClose}
-                  >
-                    <MenuItem onClick={handleProfile}>Profile</MenuItem>
-                    <MenuItem onClick={handleLogOut}>Log Out</MenuItem>
-                  </Menu>
+                  <Grid item>
+                    <Button
+                      className={classes.defaultButton}
+                      color="inherit"
+                      onClick={handleLogOut}
+                      variant='contained'
+                      color='secondary'
+                    >
+                    Log out
+                    </Button>
+                  </Grid>
                 </Grid>
               ) : (
                 <Grid container item justify="center" spacing={2}>
                   <Grid item>
                     <Button
-                    className={classes.defaultButton}
-                    color="inherit"
-                    href="/signup"
+                      className={classes.defaultButton}
+                      color="inherit"
+                      href="/signup"
                     >
                     Sign Up
                     </Button>

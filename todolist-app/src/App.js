@@ -5,12 +5,15 @@ import { BrowserRouter, Switch, Route} from "react-router-dom";
 import PrivateRoute from './routes/PrivateRoute';
 import AuthRoute from './routes/AuthRoute';
 
-import {Dashboard} from './pages/Dashboard';
+import { ProjectsView as Projects } from './pages/Projects';
+import { TasksCollection } from './pages/TasksCollection';
 import { Login } from './pages/Login';
+import { ProjectDetail } from './pages/ProjectDetail';
+import { Profile } from './pages/Profile';
 
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
-import DrawerContent from './components/Drawer/DrawerContent';
+import { DueTasksMenuList, NavigationsMenuList } from './components/Drawer/DrawerContent';
 
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -36,7 +39,7 @@ const useStyles = makeStyles((theme) => ({
         duration: theme.transitions.duration.leavingScreen,
     }),
     marginLeft: 0,
-    height: "100%"
+    minHeight: '80%'
   },
   contentShift: {
     [theme.breakpoints.up('sm')]:{
@@ -65,10 +68,8 @@ const useStyles = makeStyles((theme) => ({
     }
   },
   drawer: {
-    [theme.breakpoints.up('sm')]: {
-      width: NAVIGATION_DRAWER_WIDTH,
-      flexShrink: 0,
-    },
+    width: NAVIGATION_DRAWER_WIDTH,
+    flexShrink: 0,
   },
   drawerHeader: {
     display: 'flex',
@@ -114,7 +115,9 @@ function App() {
                 </IconButton>
               </div>
               <Divider />
-              <DrawerContent/>
+              <DueTasksMenuList />
+              <Divider />
+              <NavigationsMenuList />
             </Drawer>
           </nav> : null
         }
@@ -123,16 +126,28 @@ function App() {
         })}>
           <Switch>
             <PrivateRoute exact path='/'>
-              <Dashboard/>
+              <Projects/>
             </PrivateRoute>
 
             <AuthRoute exact path='/login'>
               <Login/>
             </AuthRoute>
 
-            <Route exact path='/test/dashboard'>
-              <Dashboard/>
-            </Route>
+            <PrivateRoute exact path='/projects'>
+              <Projects/>
+            </PrivateRoute>
+
+            <PrivateRoute exact path='/project/:project_id'>
+              <ProjectDetail/>
+            </PrivateRoute>
+
+            <PrivateRoute exact path='/tasks/:tasks_group'>
+              <TasksCollection/>
+            </PrivateRoute>
+
+            <PrivateRoute exact path='/profile'>
+              <Profile/>
+            </PrivateRoute>
 
             <Route component={NotFoundPage}/>
           </Switch>
@@ -140,9 +155,7 @@ function App() {
 
         <footer className={clsx(classes.footer, {
           [classes.footerShift]: isDrawerOpen,
-        })} style={{
-          backgroundColor: 'yellow'
-        }}>
+        })}>
           <Footer />
         </footer>
 

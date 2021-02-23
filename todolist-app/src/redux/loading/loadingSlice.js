@@ -3,7 +3,7 @@ import { createSlice } from '@reduxjs/toolkit';
 export const loadingSlice = createSlice({
   name: 'loading',
   initialState: {
-    loadingPrompt: null,
+    loadingPrompt: "Page is initializing, please wait...",
   },
   reducers: {
     setLoadingPrompt: (state, action) => {
