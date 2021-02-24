@@ -60,20 +60,10 @@ const useStyles = makeStyles((theme) => ({
 
 export default function DefaultAppBar() {
     const classes = useStyles();
-    const [anchorEl, setAnchorEl] = useState(null);
     const { access_token, set_access_token } = useAuth();
-    const open = Boolean(anchorEl);
-  
-    const history = useHistory();
 
     const handleLogOut = async () => {
         set_access_token(null);
-        setAnchorEl(null);
-        history.push("/");
-    };
-  
-    const handleProfile = () => {
-        history.push("/profile");
     };
 
     const navigationPanelOpenState = Boolean(useSelector((state) => state.navigation.isNavigationOpened));

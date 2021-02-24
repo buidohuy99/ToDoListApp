@@ -6,6 +6,7 @@ export const PROFILE_PAGE = "PROFILE_PAGE";
 export const TODAY_PAGE = "TODAY_PAGE";
 export const UPCOMING_PAGE = "UPCOMING_PAGE";
 export const PROJECT_DETAIL_PAGE = "PROJECT_DETAIL_PAGE";
+export const LOGIN_PAGE = "LOGIN_PAGE";
 
 //possible tasks filter
 export const POSSIBLE_TASKS_GROUP = ["today" , "upcoming"];

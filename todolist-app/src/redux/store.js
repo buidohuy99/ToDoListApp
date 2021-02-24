@@ -6,6 +6,6 @@ import loadingReducer from './loading/loadingSlice';
 export default configureStore({
   reducer: {
     navigation: navigationReducer,
-    loading: loadingReducer
+    loading: loadingReducer,
   },
 });

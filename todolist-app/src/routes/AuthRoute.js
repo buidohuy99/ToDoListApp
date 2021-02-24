@@ -8,9 +8,9 @@ export default function AuthRoute({children, ...rest }) {
   return(
     <Route {...rest}>
         {
-            !access_token? children
-            : 
-            <Redirect to="/" />
+          !access_token? children
+          : 
+          <Redirect to="/" />
         }
     </Route>
     );

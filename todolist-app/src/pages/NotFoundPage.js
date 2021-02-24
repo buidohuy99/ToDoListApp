@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+
+import { useDispatch } from 'react-redux';
+import { setCurrentPage } from '../redux/navigation/navigationSlice';
 
 import '../css/global.scss';
 
@@ -6,6 +9,12 @@ import {Link} from 'react-router-dom';
 import {Button, Grid} from '@material-ui/core';
 
 export default function NotFoundPage(){
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        dispatch(setCurrentPage(null));
+    }, []);
+
     return(
         <Grid container style={{
             display: 'flex',

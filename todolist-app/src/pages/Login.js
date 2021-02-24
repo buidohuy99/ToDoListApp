@@ -4,10 +4,15 @@ import Alert from '@material-ui/lab/Alert';
 import { makeStyles } from '@material-ui/core/styles';
 
 import {useState, useEffect} from 'react';
+import { useDispatch } from 'react-redux';
+
+import { setCurrentPage } from '../redux/navigation/navigationSlice';
 
 import {useAuth, AuthAxios} from '../contexts/auth';
 
 import {Link as RouterLink} from 'react-router-dom';
+
+import { LOGIN_PAGE } from '../constants/constants';
 
 const useStyles = makeStyles((theme) => ({
     paper: {
@@ -34,6 +39,7 @@ export function Login({}){
 
     const [isError, setIsError] = useState(false);
     const { set_access_token } = useAuth();
+    const dispatch = useDispatch();
 
     //Login infos
     const [username, setUsername] = useState(null);
@@ -70,6 +76,8 @@ export function Login({}){
     }
 
     useEffect(() => {
+      dispatch(setCurrentPage(LOGIN_PAGE));
+
       return () => {
         setUsername(null);
         setPassword(null);  

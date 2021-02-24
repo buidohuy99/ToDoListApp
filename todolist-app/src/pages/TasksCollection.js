@@ -21,8 +21,6 @@ export function TasksCollection(){
         }
         if(hasValidParam){
             dispatch(setCurrentPage(params.tasks_group === 'today' ? TODAY_PAGE : UPCOMING_PAGE));
-        }else{
-            dispatch(setCurrentPage(null));
         }
     }, [params.tasks_group]);
 

@@ -12,7 +12,7 @@ export const navigationSlice = createSlice({
     },
     setCurrentPage: (state, action) => {
       state.currentPage = action.payload ? String(action.payload) : null;
-    }
+    },
   },
 });
 

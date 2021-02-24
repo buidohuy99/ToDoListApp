@@ -1,6 +1,5 @@
 import clsx from 'clsx';
 
-import {useAuth} from './contexts/auth';
 import { BrowserRouter, Switch, Route} from "react-router-dom";
 import PrivateRoute from './routes/PrivateRoute';
 import AuthRoute from './routes/AuthRoute';
@@ -13,7 +12,6 @@ import { Profile } from './pages/Profile';
 
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
-import { DueTasksMenuList, NavigationsMenuList } from './components/Drawer/DrawerContent';
 
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -22,13 +20,13 @@ import { theme as pageTheme } from './themes/WebsiteThemePalette';
 
 import { useSelector, useDispatch } from 'react-redux';
 import { CssBaseline, Drawer, CircularProgress, IconButton, Divider, Backdrop, Grid, Typography } from '@material-ui/core';
-import { makeStyles, useTheme } from "@material-ui/core";
+import { makeStyles } from "@material-ui/core";
 
-import {ChevronLeft, ChevronRight } from '@material-ui/icons';
+import GlobalDrawer from './components/Drawer/Drawer';
 
 import {NAVIGATION_DRAWER_WIDTH} from './constants/constants';
 
-import {setNavigationOpenState} from './redux/navigation/navigationSlice';
+import {AuthProvider} from './contexts/auth';
 
 const useStyles = makeStyles((theme) => ({
   content: {
@@ -39,7 +37,7 @@ const useStyles = makeStyles((theme) => ({
         duration: theme.transitions.duration.leavingScreen,
     }),
     marginLeft: 0,
-    minHeight: '80%'
+    height: '100%'
   },
   contentShift: {
     [theme.breakpoints.up('sm')]:{
@@ -87,9 +85,6 @@ const useStyles = makeStyles((theme) => ({
 
 function App() {
   const classes = useStyles();
-  const theme = useTheme();
-  const {access_token} = useAuth();
-  const dispatch = useDispatch();
 
   const isDrawerOpen = Boolean(useSelector((state) => state.navigation.isNavigationOpened));
   const loadingPrompt = useSelector((state) => state.loading.loadingPrompt);
@@ -97,87 +92,68 @@ function App() {
   return (
     <ThemeProvider theme={pageTheme}>
       <BrowserRouter>
-        <Header/>
-        <CssBaseline/>
-        {
-          access_token ?
-          <nav className={classes.drawer} aria-label="navigations">
-            <Drawer open={isDrawerOpen} classes={{
-                paper: classes.drawerPaper,
-            }}>
-              <div className={classes.drawerHeader}> 
-                <IconButton onClick={() => {
-                  dispatch(
-                    setNavigationOpenState(!isDrawerOpen)
-                  );
-                }}>
-                  {theme.direction === 'ltr' ? <ChevronLeft /> : <ChevronRight />}
-                </IconButton>
-              </div>
-              <Divider />
-              <DueTasksMenuList />
-              <Divider />
-              <NavigationsMenuList />
-            </Drawer>
-          </nav> : null
-        }
-        <main className={clsx(classes.content, {
-          [classes.contentShift]: isDrawerOpen,
-        })}>
-          <Switch>
-            <PrivateRoute exact path='/'>
-              <Projects/>
-            </PrivateRoute>
+        <AuthProvider>
+          <Header/>
+          <CssBaseline/>
+          <GlobalDrawer/>
+          <main className={clsx(classes.content, {
+            [classes.contentShift]: isDrawerOpen,
+          })}>
+            <Switch>
+              <PrivateRoute exact path='/'>
+                <Projects/>
+              </PrivateRoute>
 
-            <AuthRoute exact path='/login'>
-              <Login/>
-            </AuthRoute>
+              <AuthRoute exact path='/login'>
+                <Login/>
+              </AuthRoute>
 
-            <PrivateRoute exact path='/projects'>
-              <Projects/>
-            </PrivateRoute>
+              <PrivateRoute exact path='/projects'>
+                <Projects/>
+              </PrivateRoute>
 
-            <PrivateRoute exact path='/project/:project_id'>
-              <ProjectDetail/>
-            </PrivateRoute>
+              <PrivateRoute exact path='/project/:project_id'>
+                <ProjectDetail/>
+              </PrivateRoute>
 
-            <PrivateRoute exact path='/tasks/:tasks_group'>
-              <TasksCollection/>
-            </PrivateRoute>
+              <PrivateRoute exact path='/tasks/:tasks_group'>
+                <TasksCollection/>
+              </PrivateRoute>
 
-            <PrivateRoute exact path='/profile'>
-              <Profile/>
-            </PrivateRoute>
+              <PrivateRoute exact path='/profile'>
+                <Profile/>
+              </PrivateRoute>
 
-            <Route component={NotFoundPage}/>
-          </Switch>
-        </main>
+              <Route component={NotFoundPage}/>
+            </Switch>
+          </main>
 
-        <footer className={clsx(classes.footer, {
-          [classes.footerShift]: isDrawerOpen,
-        })}>
-          <Footer />
-        </footer>
+          <footer className={clsx(classes.footer, {
+            [classes.footerShift]: isDrawerOpen,
+          })}>
+            <Footer />
+          </footer>
 
-        <Backdrop
-          open={loadingPrompt !== null}
-          style={{ color: "#fff", zIndex: 100 }}
-        >
-          <Grid container item justify="center">
-            <Grid container item xs={12} className={classes.toolbar}>
+          <Backdrop
+            open={loadingPrompt !== null}
+            style={{ color: "#fff", zIndex: 100 }}
+          >
+            <Grid container item justify="center">
+              <Grid container item xs={12} className={classes.toolbar}>
+              </Grid>
+              <Grid container item xs={12} justify="center" style={{
+                marginBottom: 15,
+              }}>
+                <CircularProgress color="inherit" />
+              </Grid>
+              <Grid container item xs={12} justify="center">
+                <Typography variant="body1" style={{ color: "white" }}>
+                  {loadingPrompt}
+                </Typography>
+              </Grid>
             </Grid>
-            <Grid container item xs={12} justify="center" style={{
-              marginBottom: 15,
-            }}>
-              <CircularProgress color="inherit" />
-            </Grid>
-            <Grid container item xs={12} justify="center">
-              <Typography variant="body1" style={{ color: "white" }}>
-                {loadingPrompt}
-              </Typography>
-            </Grid>
-          </Grid>
-        </Backdrop>
+          </Backdrop>
+        </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>
   );
