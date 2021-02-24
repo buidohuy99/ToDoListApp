@@ -37,7 +37,6 @@ const useStyles = makeStyles((theme) => ({
         duration: theme.transitions.duration.leavingScreen,
     }),
     marginLeft: 0,
-    height: '100%'
   },
   contentShift: {
     [theme.breakpoints.up('sm')]:{
@@ -64,21 +63,6 @@ const useStyles = makeStyles((theme) => ({
       }),
       marginLeft: NAVIGATION_DRAWER_WIDTH,
     }
-  },
-  drawer: {
-    width: NAVIGATION_DRAWER_WIDTH,
-    flexShrink: 0,
-  },
-  drawerHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    padding: theme.spacing(0, 1),
-    // necessary for content to be below app bar
-    ...theme.mixins.toolbar,
-    justifyContent: 'flex-end',
-  },
-  drawerPaper: {
-    width: NAVIGATION_DRAWER_WIDTH,
   },
   toolbar: theme.mixins.toolbar,
 }));
