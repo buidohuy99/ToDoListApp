@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { TextField, InputAdornment, IconButton, FormControl, Input } from '@material-ui/core';
 import { Search as SearchIcon } from '@material-ui/icons';
 
+import { setSearchString as setGlobalSearchString } from '../../redux/projects/projectsSlice';
+
 export function SearchBar({searchBarPlaceholder, callbackOnSearch}){
     const [searchString, setSearchString] = useState(null);
 
@@ -20,7 +22,7 @@ export function SearchBar({searchBarPlaceholder, callbackOnSearch}){
                     aria-label="toggle password visibility"
                     onClick={() => {
                         console.log('searched');
-                        callbackOnSearch(searchString);
+                        setGlobalSearchString(searchString);
                     }}>          
                         <SearchIcon/>                          
                     </IconButton>

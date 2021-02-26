@@ -129,6 +129,7 @@ export function AuthProvider({children}){
 
         const unlisten = history.listen((location, action) => {
             recheckAccessToken();
+
         });
 
         recheckAccessToken();

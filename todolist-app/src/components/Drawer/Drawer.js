@@ -40,7 +40,11 @@ export default function GlobalDrawer() {
         access_token ?
         <nav className={classes.drawer} aria-label="navigations">
           <Drawer open={isDrawerOpen} classes={{
-              paper: classes.drawerPaper,
+            paper: classes.drawerPaper,
+          }} onClose={() => {
+            dispatch(
+              setNavigationOpenState(!isDrawerOpen)
+            );
           }}>
             <div className={classes.drawerHeader}> 
               <IconButton onClick={() => {

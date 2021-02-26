@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { setCurrentPage } from '../redux/navigation/navigationSlice';
-import { setProjects } from '../redux/projects/projectsSlice';
 
 import { PROJECTS_PAGE } from '../constants/constants';
 
@@ -11,7 +10,9 @@ import { makeStyles, useTheme } from '@material-ui/core';
 
 //Components
 import { SearchBar } from '../components/Projects/SearchBar';
-import { ProjectsGrid } from '../components/Projects/ProjectsGrid';
+import ProjectsGrid from '../components/Projects/ProjectsGrid';
+
+import { setSearchString } from '../redux/projects/projectsSlice';
 
 import clsx from 'clsx';
 
@@ -24,11 +25,6 @@ const useStyles = makeStyles((theme) => ({
         padding: theme.spacing(1),
         backgroundColor: theme.palette.primary.main,
         color: theme.palette.primary.contrastText,
-        [theme.breakpoints.down("sm")]:{
-            flexDirection: 'row',
-            justifyContent: "center",
-            alignItems: "center",
-        }
     },
     filterAreaInnerPaper: {
         backgroundColor: 'white',
@@ -44,94 +40,106 @@ export function ProjectsView(){
 
     useEffect(() => {
         dispatch(setCurrentPage(PROJECTS_PAGE));
+
+        return () => {
+            dispatch(
+                setSearchString(null)
+            );
+        };
     }, []);
 
-    const onSearchSubmit = (searchString) => {
-
-    }
+    const searchString = useSelector((state) => state.projects.searchString);
 
     return(
     <Container maxWidth="lg">
-        <Grid container justify="center" spacing={1}>
+        <Grid container justify="center" spacing={2}>
             <Grid item xs={12} sm={10} md={5} lg={4}>
-                <Paper elevation={3} className={classes.filterArea} style={{
-                    position: 'sticky'
+                <Grid container item xs={12} spacing={3} justify="center" style={{
+                    position: 'sticky',
+                    top: theme.mixins.toolbar.minHeight + theme.spacing(2),
                 }}>
-                    <Grid container spacing={1}>
-                        <Grid item xs={12}>
-                            <Typography variant="h6" style={{
-                                userSelect: 'none',
-                                fontWeight: 'normal'
-                            }}>
-                                Filter
-                            </Typography>
-                        </Grid>
-                        <Grid item xs={12}>
-                            <Paper elevation={3} className={clsx(classes.filterArea, classes.filterAreaInnerPaper)}>
-                                <Grid container spacing={2}>
-                                    <Grid item xs={12}>
-                                        <SearchBar searchBarPlaceholder="Find by project name" callbackOnSearch={onSearchSubmit}/>
-                                    </Grid>
-                                    <Grid item xs={12} spacing={1}>
-                                        <Grid container item xs={12} justify="center">
-                                            <Typography variant="body1" style={{
-                                                userSelect: 'none',
-                                                fontWeight: 'bold'
-                                            }}>
-                                                Sort by...
-                                            </Typography>
-                                        </Grid>
-                                        <Grid container item xs={12} justify="center">
-                                            <Grid container item xs={12} justify="center" style={{
-                                                flex: 1,
-                                                flexDirection: 'row',
-                                            }}>
-                                                <Grid item style={{
-                                                    padding: theme.spacing(1)
-                                                }}>
-                                                    <Button variant='contained' color='secondary'>
-                                                        A-Z
-                                                    </Button>
-                                                </Grid>
-                                                <Grid item style={{
-                                                    padding: theme.spacing(1)
-                                                }}>
-                                                    <Button variant='contained' color='secondary'>
-                                                        Z-A
-                                                    </Button>
-                                                </Grid>
-                                                <Grid item style={{
-                                                    padding: theme.spacing(1)
-                                                }}>
-                                                    <Button variant='contained' color='secondary'>
-                                                        Recently created
-                                                    </Button>
-                                                </Grid>
-                                                <Grid item style={{
-                                                    padding: theme.spacing(1)
-                                                }}>
-                                                    <Button variant='contained' color='secondary'>
-                                                        Recently updated
-                                                    </Button>
-                                                </Grid>
-                                            </Grid>
-                                        </Grid>
-                                    </Grid>
-                                    
-                                </Grid>
-                            </Paper>
-                        </Grid>
+                    <Grid container item xs={12} justify="center">
+                        <Button variant='contained' color='secondary' size='large'>
+                            Create a new project...
+                        </Button>
                     </Grid>
-                </Paper>
+                    <Grid item xs={12}>
+                        <Paper elevation={3} className={classes.filterArea}>
+                            <Grid container spacing={1} justify="center">
+                                <Grid item xs={12}>
+                                    <Typography variant="h6" style={{
+                                        userSelect: 'none',
+                                        fontWeight: 'normal'
+                                    }}>
+                                        Filter
+                                    </Typography>
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <Paper elevation={3} className={clsx(classes.filterArea, classes.filterAreaInnerPaper)}>
+                                        <Grid container spacing={2}>
+                                            <Grid item xs={12}>
+                                                <SearchBar searchBarPlaceholder="Find by project name"/>
+                                            </Grid>
+                                            <Grid container item xs={12} spacing={1}>
+                                                <Grid container item xs={12} justify="center">
+                                                    <Typography variant="body1" style={{
+                                                        userSelect: 'none',
+                                                        fontWeight: 'bold'
+                                                    }}>
+                                                        Sort by...
+                                                    </Typography>
+                                                </Grid>
+                                                <Grid container item xs={12} justify="center">
+                                                    <Grid container item xs={12} justify="center" style={{
+                                                        flex: 1,
+                                                        flexDirection: 'row',
+                                                    }}>
+                                                        <Grid item style={{
+                                                            padding: theme.spacing(1)
+                                                        }}>
+                                                            <Button variant='contained' color='secondary' size="small">
+                                                                A-Z
+                                                            </Button>
+                                                        </Grid>
+                                                        <Grid item style={{
+                                                            padding: theme.spacing(1)
+                                                        }}>
+                                                            <Button variant='contained' color='secondary' size="small">
+                                                                Z-A
+                                                            </Button>
+                                                        </Grid>
+                                                        <Grid item style={{
+                                                            padding: theme.spacing(1)
+                                                        }}>
+                                                            <Button variant='contained' color='secondary' size="small">
+                                                                Recently created
+                                                            </Button>
+                                                        </Grid>
+                                                        <Grid item style={{
+                                                            padding: theme.spacing(1)
+                                                        }}>
+                                                            <Button variant='contained' color='secondary' size="small">
+                                                                Recently updated
+                                                            </Button>
+                                                        </Grid>
+                                                    </Grid>
+                                                </Grid>
+                                            </Grid>          
+                                        </Grid>
+                                    </Paper>
+                                </Grid>
+                            </Grid>
+                        </Paper>
+                    </Grid> 
+                </Grid>
             </Grid>
             <Grid item xs={12} md={7} lg={8}>
-                <Paper elevation={3} style={{
-                    padding: theme.spacing(1)
+                <Grid container spacing={3} justify="center" style={{
+                    paddingLeft: theme.spacing(1),
+                    paddingRight: theme.spacing(1),
                 }}>
-                    <Grid container spacing={1}>
-                        <ProjectsGrid/>
-                    </Grid>
-                </Paper>
+                    <ProjectsGrid/>
+                </Grid>
             </Grid>
         </Grid>
     </Container>);

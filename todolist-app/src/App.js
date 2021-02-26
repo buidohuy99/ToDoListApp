@@ -39,7 +39,7 @@ const useStyles = makeStyles((theme) => ({
     marginLeft: 0,
   },
   contentShift: {
-    [theme.breakpoints.up('sm')]:{
+    [theme.breakpoints.up('md')]:{
       transition: theme.transitions.create('margin', {
           easing: theme.transitions.easing.easeOut,
           duration: theme.transitions.duration.enteringScreen,
@@ -56,7 +56,7 @@ const useStyles = makeStyles((theme) => ({
     marginLeft: 0
   },
   footerShift: {
-    [theme.breakpoints.up('sm')]:{
+    [theme.breakpoints.up('md')]:{
       transition: theme.transitions.create('margin', {
           easing: theme.transitions.easing.easeOut,
           duration: theme.transitions.duration.enteringScreen,
@@ -77,8 +77,8 @@ function App() {
     <ThemeProvider theme={pageTheme}>
       <BrowserRouter>
         <AuthProvider>
-          <Header/>
           <CssBaseline/>
+          <Header/>        
           <GlobalDrawer/>
           <main className={clsx(classes.content, {
             [classes.contentShift]: isDrawerOpen,
@@ -120,7 +120,7 @@ function App() {
 
           <Backdrop
             open={loadingPrompt !== null}
-            style={{ color: "#fff", zIndex: 100 }}
+            style={{ position: "fixed", color: "#fff", zIndex: 100, height: "100%", width: "100%" }}
           >
             <Grid container item justify="center">
               <Grid container item xs={12} className={classes.toolbar}>
