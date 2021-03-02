@@ -1,4 +1,4 @@
-import {Container, Avatar, Button, TextField, Link, Grid, Typography, CircularProgress, FormControlLabel, Checkbox} from '@material-ui/core';
+import {Container, Avatar, Button, TextField, Link, Grid, Typography, CircularProgress } from '@material-ui/core';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Alert from '@material-ui/lab/Alert';
 import { makeStyles } from '@material-ui/core/styles';
@@ -7,12 +7,15 @@ import {useState, useEffect} from 'react';
 import { useDispatch } from 'react-redux';
 
 import { setCurrentPage } from '../redux/navigation/navigationSlice';
+import { setLoadingPrompt } from '../redux/loading/loadingSlice';
 
-import {useAuth, AuthAxios} from '../contexts/auth';
+import {useAuth, AuthAxios, accesstoken_keyname, uid_keyname} from '../contexts/auth';
 
 import {Link as RouterLink} from 'react-router-dom';
 
 import { LOGIN_PAGE } from '../constants/constants';
+
+import signalR from '../utils/signalR';
 
 const useStyles = makeStyles((theme) => ({
     paper: {
@@ -34,7 +37,7 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-export function Login({}){
+export function Login(props){
     const classes = useStyles();
 
     const [isError, setIsError] = useState(false);
@@ -47,32 +50,39 @@ export function Login({}){
     const [disableForm, setDisableForm] = useState(false);
 
     const postLogin = async () => {
-        if(!username || !password) {
-            setIsError(true);
-            return;
-        } 
-        let result;
-        try{
-          result = await AuthAxios.post(process.env.REACT_APP_API_URL + "/main-business/v1/authentication/login", {
-              username,
-              password,
-          });
-          setUsername(null);
-          setPassword(null);  
-          setDisableForm(false);  
-          if (result.status === 200) {
-            const {data} = result.data;
-            set_access_token(data.token);
-          } else {
-            setIsError(true);
-          }
-        }catch(err){
-          console.log(err);
-          setUsername(null);
-          setPassword(null);  
-          setDisableForm(false); 
+      dispatch(setLoadingPrompt("Logging you in..."));
+      if(!username || !password) {
+          setIsError(true);
+          return;
+      } 
+      let result;
+      try{
+        result = await AuthAxios.post(process.env.REACT_APP_API_URL + "/main-business/v1/authentication/login", {
+            username,
+            password,
+        });
+        setUsername(null);
+        setPassword(null);  
+        setDisableForm(false);  
+        if (result.status === 200) {
+          const {data} = result.data;
+          localStorage.setItem(accesstoken_keyname, data.token);
+          localStorage.setItem(uid_keyname, data.uid);
+          await signalR.invoke("Login", data.uid);
+          set_access_token(data.token);
+          return;
+        } else {
           setIsError(true);
         }
+      }catch(err){
+        console.log(err);
+        set_access_token(null);
+        setUsername(null);
+        setPassword(null);  
+        setDisableForm(false); 
+        setIsError(true);
+      }
+      dispatch(setLoadingPrompt(null));
     }
 
     useEffect(() => {

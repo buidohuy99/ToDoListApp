@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import Slide from '@material-ui/core/Slide';
 import PropTypes from 'prop-types';
 
-import { useAuth } from '../../contexts/auth';
+import { useAuth, uid_keyname } from '../../contexts/auth';
 
 import { AppBar, Toolbar, Typography, IconButton, Button, Grid } from '@material-ui/core';
 import { makeStyles, useScrollTrigger } from "@material-ui/core";
@@ -13,7 +13,10 @@ import { Link } from "react-router-dom";
 import { NAVIGATION_DRAWER_WIDTH } from '../../constants/constants';
 
 import { useSelector, useDispatch } from 'react-redux';
+import { setLoadingPrompt } from '../../redux/loading/loadingSlice';
 import { setNavigationOpenState } from '../../redux/navigation/navigationSlice';
+
+import signalR from '../../utils/signalR';
 
 const useStyles = makeStyles((theme) => ({
   title: {
@@ -84,30 +87,36 @@ HideOnScroll.propTypes = {
 };
 
 export default function DefaultAppBar(props) {
+    const dispatch = useDispatch();
+
     const classes = useStyles();
     const { access_token, set_access_token } = useAuth();
 
     const handleLogOut = async () => {
-        set_access_token(null);
+      dispatch(setLoadingPrompt("Logging you out..."));
+      try{
+        await signalR.invoke("Logout", parseInt(localStorage.getItem(uid_keyname)));
+      } catch (e){
+        console.log(e);
+      }
+      set_access_token(null);
+      dispatch(setLoadingPrompt(null));
     };
 
     const navigationPanelOpenState = Boolean(useSelector((state) => state.navigation.isNavigationOpened));
-    const loadingPrompt = useSelector((state) => state.loading.loadingPrompt);
-
-    const dispatch = useDispatch();
 
     return (
       <AppBar position='sticky' className={clsx(classes.appBar, {
         [classes.appBarShift]: navigationPanelOpenState,
-      })}>
+      })} style={{
+        zIndex: 5,
+      }}>
         <Toolbar>  
           <Grid container alignItems="center" justify="center" spacing={2}>
-            <Grid item style={{
-              display: access_token && loadingPrompt === null ? 'block' : 'none'
-            }}>
+            <Grid item>
+              {access_token ?
               <IconButton
                 className={classes.navigationDrawerButton}
-                color="inherit"
                 aria-label="open navigation drawer"
                 onClick={() => {
                   dispatch(
@@ -119,7 +128,7 @@ export default function DefaultAppBar(props) {
                 color='secondary'
               >
                 <MenuIcon/>
-              </IconButton>
+              </IconButton> : null}
             </Grid>
             <Grid item className={classes.title}>
               <Typography
@@ -136,13 +145,10 @@ export default function DefaultAppBar(props) {
             </Grid>
             <Grid item>
               {access_token ? (
-                <Grid container item justify="center" spacing={2} style={{
-                  display: loadingPrompt === null ? 'block' : 'none'
-                }}>
+                <Grid container item justify="center" spacing={2}>
                   <Grid item>
                     <Button
                       className={classes.defaultButton}
-                      color="inherit"
                       onClick={handleLogOut}
                       variant='contained'
                       color='secondary'

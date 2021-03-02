@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { Grid, withWidth, CircularProgress } from '@material-ui/core';
 import { Pagination, Alert } from '@material-ui/lab';
@@ -7,50 +8,82 @@ import { ProjectGridItem } from './ProjectGridItem';
 
 import { AuthAxios } from '../../contexts/auth';
 
-function ProjectsGrid({searchString, width}){
-    const maxRoomPerPage = /sm|md/.test(width) ? 8 : /xs/.test(width) ? 10 : 9;
+import { setCurrentProjects } from '../../redux/projects/projectsSlice';
+
+import signalR from '../../utils/signalR';
+
+function ProjectsGrid({width}){
+    const dispatch = useDispatch();
+
+    const maxProjectPerPage = /sm|md/.test(width) ? 8 : /xs/.test(width) ? 10 : 9;
     const [numOfPages, setNumOfPages] = useState(1);
     const [currentPage, setCurrentPage] = useState(1);
-    const [viewingProjects, setViewingProjects] = useState([]);
+    
     const [isProjectsLoading, setProjectsLoading] = useState(true);
     const [isPagesLoading, setPagesLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const viewingProjects = useSelector((state) => state.projects.currentProjects);
+    const searchString = useSelector((state) => state.projects.searchString);
+
     useEffect(() => {
         (async() => {   
-            try{
-                const query = `PageNumber=${currentPage}&ItemPerPage=${maxRoomPerPage}`;
-                const results = await AuthAxios.get(process.env.REACT_APP_API_URL + `/main-business/v1/project-management/projects?` + query);
+            setPagesLoading(true);
+            setProjectsLoading(true);
+            try{      
+                const query = `PageNumber=${currentPage}&ItemPerPage=${maxProjectPerPage}`;
+                const search = searchString ? `&ProjectName=${searchString}` : '';
+                const results = await AuthAxios.get(process.env.REACT_APP_API_URL + `/main-business/v1/project-management/projects?` + query + search);
                 const {data} = results.data;
-                setViewingProjects(data.projects);
+                dispatch(setCurrentProjects(data.projects));
                 setNumOfPages(data.totalPages);
-                setPagesLoading(false);
-            }catch(e){
+            }catch(e){    
+                if(e.response && e.response.status === 400 && e.response.data && e.response.data.data.newMaxPage){        
+                    (async() => {
+                        try{
+                            const query = `PageNumber=${e.response.data.data.newMaxPage}&ItemPerPage=${maxProjectPerPage}`;
+                            const search = searchString ? `&ProjectName=${searchString}` : '';
+                            const refetch = await AuthAxios.get(process.env.REACT_APP_API_URL + `/main-business/v1/project-management/projects?` + query + search); 
+                            const {data} = refetch.data;
+                            dispatch(setCurrentProjects(data.projects));
+                            setCurrentPage(e.response.data.data.newMaxPage);
+                            setNumOfPages(e.response.data.data.newMaxPage);
+                        }catch(ex){
+                            setError('An error occured while fetching the rooms page, try refreshing');
+                        }
+                        setProjectsLoading(false);
+                        setPagesLoading(false);
+                    })();
+                    return;
+                }
                 setError('There has been a problem with loading projects, please try refreshing...')
             }
             setProjectsLoading(false);
+            setPagesLoading(false);
         })();
-    }, [currentPage]);
+    }, [maxProjectPerPage, searchString]);
 
     const handleOnPaginationChange = async(event, pageNumber) => {
-        if(pageNumber === currentPage) return;
+        if(parseInt(pageNumber) === parseInt(currentPage)) return;
         setPagesLoading(true);
         setProjectsLoading(true);
         try{
-            const query = `PageNumber=${currentPage}&ItemPerPage=${maxRoomPerPage}`;
-            const results = await AuthAxios.get(process.env.REACT_APP_API_URL + `/main-business/v1/project-management/projects?` + query);
+            const query = `PageNumber=${pageNumber}&ItemPerPage=${maxProjectPerPage}`;
+            const search = searchString ? `&ProjectName=${searchString}` : '';
+            const results = await AuthAxios.get(process.env.REACT_APP_API_URL + `/main-business/v1/project-management/projects?` + query + search);
             const {data} = results.data;
-            setViewingProjects(data.projects);
+            dispatch(setCurrentProjects(data.projects));
             setCurrentPage(pageNumber);
             setNumOfPages(data.totalPages);       
         }catch(e){
             if(e.response && e.response.status === 400 && e.response.data && e.response.data.data.newMaxPage){
                 (async() => {
                     try{
-                        const query = `PageNumber=${e.response.data.data.newMaxPage}&ItemPerPage=${maxRoomPerPage}`;
-                        const refetch = AuthAxios.get(process.env.REACT_APP_API_URL + `/main-business/v1/project-management/projects?` + query); 
+                        const query = `PageNumber=${e.response.data.data.newMaxPage}&ItemPerPage=${maxProjectPerPage}`;
+                        const search = searchString ? `&ProjectName=${searchString}` : '';
+                        const refetch = AuthAxios.get(process.env.REACT_APP_API_URL + `/main-business/v1/project-management/projects?` + query + search); 
                         const {data} = refetch.data;
-                        setViewingProjects(data.projects);
+                        dispatch(setCurrentProjects(data.projects));
                         setCurrentPage(e.response.data.data.newMaxPage);
                         setNumOfPages(e.response.data.data.newMaxPage);
                     }catch(e){
@@ -66,6 +99,33 @@ function ProjectsGrid({searchString, width}){
         setProjectsLoading(false);
         setPagesLoading(false);
     }
+
+    useEffect(() => {
+        const updateGridStatus = (projects) => {
+            setPagesLoading(true);
+            if(searchString){
+                console.log('aaaaaaaaaa');
+                projects = projects.filter((value) => value.name.includes(searchString))
+            }
+            const pagesCount = parseInt(Math.ceil(projects.length/maxProjectPerPage));
+            setNumOfPages(pagesCount);
+            if(currentPage >= pagesCount){
+                setProjectsLoading(true);
+                const newCurrentPage = currentPage > pagesCount ? pagesCount : currentPage;
+                const start = (currentPage - 1)*maxProjectPerPage;
+                dispatch(setCurrentProjects(projects.slice(start, Math.min(start + maxProjectPerPage, projects.length))));
+                if(newCurrentPage !== currentPage){
+                    setCurrentPage(newCurrentPage);
+                }
+                setProjectsLoading(false);
+            }         
+            setPagesLoading(false);
+        }
+
+        signalR.on("projects-list-changed", (data) => {
+            updateGridStatus(data.projects);
+        });
+    }, [searchString]);
 
     return (
     <>
@@ -83,7 +143,7 @@ function ProjectsGrid({searchString, width}){
             :
             viewingProjects.length <= 0 ? 
             <Grid container item xs={12} justify="center">
-                <Alert severity="info">Currently you have no projects, try creating a new one!!!!!</Alert>
+                <Alert severity="info">There seems to be no projects here ¯\_(ツ)_/¯</Alert>
             </Grid>
             : viewingProjects.map((item, idx) => 
                 <ProjectGridItem key={"ProjectGridItem"+ idx} project={item}/>

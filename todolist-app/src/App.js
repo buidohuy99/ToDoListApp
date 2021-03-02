@@ -27,8 +27,16 @@ import GlobalDrawer from './components/Drawer/Drawer';
 import {NAVIGATION_DRAWER_WIDTH} from './constants/constants';
 
 import {AuthProvider} from './contexts/auth';
+import { useEffect } from 'react';
+
+import signalR from './utils/signalR';
+import { setLoadingPrompt } from './redux/loading/loadingSlice';
 
 const useStyles = makeStyles((theme) => ({
+  loadingBackdrop: {
+    position: 'fixed',
+    zIndex: theme.zIndex.drawer + 1,
+  },
   content: {
     flexGrow: 1,
     padding: theme.spacing(3),
@@ -116,13 +124,14 @@ function App() {
             [classes.footerShift]: isDrawerOpen,
           })}>
             <Footer />
-          </footer>
-
-          <Backdrop
+          </footer>      
+        </AuthProvider>
+        <Backdrop
             open={loadingPrompt !== null}
-            style={{ position: "fixed", color: "#fff", zIndex: 100, height: "100%", width: "100%" }}
-          >
-            <Grid container item justify="center">
+            className={classes.loadingBackdrop}
+            style={{ color: "#fff"}}
+            >
+            <Grid container item justify="center" style={{ position: 'fixed' }}>
               <Grid container item xs={12} className={classes.toolbar}>
               </Grid>
               <Grid container item xs={12} justify="center" style={{
@@ -131,13 +140,12 @@ function App() {
                 <CircularProgress color="inherit" />
               </Grid>
               <Grid container item xs={12} justify="center">
-                <Typography variant="body1" style={{ color: "white" }}>
+                <Typography variant="body1" style={{ color: "white", userSelect: 'none' }}>
                   {loadingPrompt}
                 </Typography>
               </Grid>
             </Grid>
           </Backdrop>
-        </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>
   );

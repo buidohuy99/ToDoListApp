@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { setCurrentPage } from '../redux/navigation/navigationSlice';
@@ -11,8 +11,9 @@ import { makeStyles, useTheme } from '@material-ui/core';
 //Components
 import { SearchBar } from '../components/Projects/SearchBar';
 import ProjectsGrid from '../components/Projects/ProjectsGrid';
+import { Create_ModifyProjectDialog } from '../components/Dialogs/Create_ModifyProjectDialog';
 
-import { setSearchString } from '../redux/projects/projectsSlice';
+import { setSearchString, setOpenState_CreateModifyProjectDialog } from '../redux/projects/projectsSlice';
 
 import clsx from 'clsx';
 
@@ -38,6 +39,8 @@ export function ProjectsView(){
     const classes = useStyles();
     const theme = useTheme();
 
+    const openCreateModifyDialog = useSelector((state) => state.projects.openCreateModifyProjectDialog);
+
     useEffect(() => {
         dispatch(setCurrentPage(PROJECTS_PAGE));
 
@@ -48,8 +51,6 @@ export function ProjectsView(){
         };
     }, []);
 
-    const searchString = useSelector((state) => state.projects.searchString);
-
     return(
     <Container maxWidth="lg">
         <Grid container justify="center" spacing={2}>
@@ -59,7 +60,9 @@ export function ProjectsView(){
                     top: theme.mixins.toolbar.minHeight + theme.spacing(2),
                 }}>
                     <Grid container item xs={12} justify="center">
-                        <Button variant='contained' color='secondary' size='large'>
+                        <Button variant='contained' color='secondary' size='large' onClick={() => {
+                            dispatch(setOpenState_CreateModifyProjectDialog(true));
+                        }}>
                             Create a new project...
                         </Button>
                     </Grid>
@@ -79,52 +82,7 @@ export function ProjectsView(){
                                         <Grid container spacing={2}>
                                             <Grid item xs={12}>
                                                 <SearchBar searchBarPlaceholder="Find by project name"/>
-                                            </Grid>
-                                            <Grid container item xs={12} spacing={1}>
-                                                <Grid container item xs={12} justify="center">
-                                                    <Typography variant="body1" style={{
-                                                        userSelect: 'none',
-                                                        fontWeight: 'bold'
-                                                    }}>
-                                                        Sort by...
-                                                    </Typography>
-                                                </Grid>
-                                                <Grid container item xs={12} justify="center">
-                                                    <Grid container item xs={12} justify="center" style={{
-                                                        flex: 1,
-                                                        flexDirection: 'row',
-                                                    }}>
-                                                        <Grid item style={{
-                                                            padding: theme.spacing(1)
-                                                        }}>
-                                                            <Button variant='contained' color='secondary' size="small">
-                                                                A-Z
-                                                            </Button>
-                                                        </Grid>
-                                                        <Grid item style={{
-                                                            padding: theme.spacing(1)
-                                                        }}>
-                                                            <Button variant='contained' color='secondary' size="small">
-                                                                Z-A
-                                                            </Button>
-                                                        </Grid>
-                                                        <Grid item style={{
-                                                            padding: theme.spacing(1)
-                                                        }}>
-                                                            <Button variant='contained' color='secondary' size="small">
-                                                                Recently created
-                                                            </Button>
-                                                        </Grid>
-                                                        <Grid item style={{
-                                                            padding: theme.spacing(1)
-                                                        }}>
-                                                            <Button variant='contained' color='secondary' size="small">
-                                                                Recently updated
-                                                            </Button>
-                                                        </Grid>
-                                                    </Grid>
-                                                </Grid>
-                                            </Grid>          
+                                            </Grid>     
                                         </Grid>
                                     </Paper>
                                 </Grid>
@@ -142,5 +100,7 @@ export function ProjectsView(){
                 </Grid>
             </Grid>
         </Grid>
+
+        <Create_ModifyProjectDialog open={openCreateModifyDialog}/>
     </Container>);
 }
