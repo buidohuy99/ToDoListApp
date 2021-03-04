@@ -9,7 +9,8 @@ import { useDispatch } from 'react-redux';
 import { setCurrentPage } from '../redux/navigation/navigationSlice';
 import { setLoadingPrompt } from '../redux/loading/loadingSlice';
 
-import {useAuth, AuthAxios, accesstoken_keyname, uid_keyname} from '../contexts/auth';
+import {useAuth, accesstoken_keyname, uid_keyname} from '../services/auth';
+import { APIWorker } from '../services/axios';
 
 import {Link as RouterLink} from 'react-router-dom';
 
@@ -57,9 +58,9 @@ export function Login(props){
       } 
       let result;
       try{
-        result = await AuthAxios.post(process.env.REACT_APP_API_URL + "/main-business/v1/authentication/login", {
-            username,
-            password,
+        result = await APIWorker.postAPI("/main-business/v1/authentication/login", {
+          username,
+          password,
         });
         setUsername(null);
         setPassword(null);  

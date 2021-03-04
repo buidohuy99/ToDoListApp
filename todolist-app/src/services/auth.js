@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
-import axios from 'axios';
 
 import { useHistory } from 'react-router-dom';
 
@@ -8,17 +7,11 @@ import { setLoadingPrompt } from '../redux/loading/loadingSlice';
 
 import signalR from '../utils/signalR';
 
+import {AuthAxios} from './axios';
+
+// Key name for local storage entries, relating authentication stuffs
 export const accesstoken_keyname = process.env.REACT_APP_ACCESSTOKEN_KEYNAME;
-export const refreshtoken_keyname = process.env.REACT_APP_REFRESHTOKEN_KEYNAME;
 export const uid_keyname = "userId";
-
-const AuthAxios = axios.create({
-    validateStatus : (status) => {
-        return (status >= 200 && status < 300) || (status === 304);
-    }
-});
-
-export {AuthAxios};
 
 export const AuthContext = createContext();
 
@@ -26,11 +19,17 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
+// this component wraps everything inside it, manages access token of the entire application
+    // everything inside the component can get and set the access_token of the entire app just by importing 
+    // useAuth function. From there, one can dereference to something like this: 
+        //const {access_token, set_access_token} = useAuth();
+        //=> get/set access_token : null means not authenticated, !null means authenticated
 export function AuthProvider({children}){
     const [accessToken, setAccessToken] = useState(localStorage.getItem(accesstoken_keyname));
     const dispatch = useDispatch();
     const history = useHistory();
 
+    // signalR connection to server
     let connection = useRef(null);
 
     const updateAccessToken = async () => {
@@ -46,14 +45,7 @@ export function AuthProvider({children}){
         }
     }
 
-    const isUnAuthorizedError = (error) => {
-        return error.config && error.response && error.response.status === 401;
-    }
-      
-    const shouldRetry = (config) => {
-        return config.retries.count < 3;
-    }
-
+    // interceptor to add authorization header to request
     const default_request_interceptor = AuthAxios.interceptors.request.use(
         config => {
             const { origin } = new URL(config.url);
@@ -70,6 +62,16 @@ export function AuthProvider({children}){
         }
     );
       
+    // response interceptor to retry sending request up to maximum 3 times
+    // in case response is an error
+    const isUnAuthorizedError = (error) => {
+        return error.config && error.response && error.response.status === 401;
+    }
+      
+    const shouldRetry = (config) => {
+        return config.retries.count < 3;
+    }
+
     const default_response_interceptor = AuthAxios.interceptors.response.use(
         (res) => {
           return res;
@@ -100,6 +102,7 @@ export function AuthProvider({children}){
         AuthAxios.interceptors.response.eject(default_response_interceptor);
     };
 
+    // access token setter
     const setToken = (data) => {
         if(data){
             localStorage.setItem(accesstoken_keyname, data);
@@ -110,12 +113,16 @@ export function AuthProvider({children}){
         setAccessToken(data);
     }
 
+    // functions and variables we can get when dereferencing from useAuth() above
     const value = {
+        // access_token getter
         access_token: accessToken,
+        // access_token setter
         set_access_token: setToken
     };
 
     useEffect(() => { 
+
         const recheckAccessToken = async() => {
             if(!connection.current){
                 dispatch(setLoadingPrompt("Establishing connection to server...."));
@@ -123,10 +130,12 @@ export function AuthProvider({children}){
                     await signalR.start();
                     connection.current = signalR; 
                 } catch (e) {
+                    connection.current = null;
                     setToken(null);
                     dispatch(setLoadingPrompt(null));
                     return;
                 }
+                dispatch(setLoadingPrompt(null));
             }
 
             //Check token part
@@ -148,12 +157,14 @@ export function AuthProvider({children}){
             dispatch(setLoadingPrompt(null));
         };
 
+        // recheck access token on every page change
         const unlisten = history.listen((location, action) => {
             recheckAccessToken();
         });
 
         recheckAccessToken();
 
+        // on authProvider unmount
         return () => {
           removeInterceptorForeverFromAxios();
           unlisten();

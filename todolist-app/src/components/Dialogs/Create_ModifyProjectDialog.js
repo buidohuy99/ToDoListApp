@@ -2,17 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 
-import { AuthAxios } from '../../contexts/auth';
+import { APIWorker } from '../../services/axios';
 
 import { Slide, Dialog, DialogTitle, Grid, TextField, DialogActions, DialogContent, DialogContentText, Button, Hidden } from '@material-ui/core';
 import { Alert } from '@material-ui/lab';
 
 import { setLoadingPrompt } from '../../redux/loading/loadingSlice';
-import { setCurrentModifyingProject, setOpenState_CreateModifyProjectDialog } from '../../redux/projects/projectsSlice';
-
-const Transition = React.forwardRef(function Transition(props, ref) {
-    return <Slide direction="up" ref={ref} {...props} />;
-});
+import { setCurrentModifyingProject, setOpenCreateModifyProjectDialog } from '../../redux/dialogs/dialogSlice';
 
 export function Create_ModifyProjectDialog({open}){
     const dispatch = useDispatch();
@@ -26,23 +22,16 @@ export function Create_ModifyProjectDialog({open}){
     const [projectNameField, setProjectNameField] = useState(null);
     const [projectDescriptionField, setProjectDescriptionField] = useState(null);
 
-    const projectToModify = useSelector((state) => state.projects.currentModifyingProject);
-    const openDialog = useSelector((state) => state.projects.openCreateModifyProjectDialog);
+    const projectToModify = useSelector((state) => state.dialog.currentModifyingProject);
+    const openDialog = useSelector((state) => state.dialog.openCreateModifyProjectDialog);
 
     const handleCloseDialog = () => {   
-        setProjectNameField(null);
-        setProjectDescriptionField(null);       
-        setError(null);   
-        setDisableForm(false);
-        if(projectToModify){
-            dispatch(setCurrentModifyingProject(null));
-        }  
-        dispatch(setOpenState_CreateModifyProjectDialog(false)); 
+        dispatch(setOpenCreateModifyProjectDialog(false));
         dispatch(setLoadingPrompt(null));
     };
 
     useEffect(() => {
-        dispatch(setOpenState_CreateModifyProjectDialog(open));
+        dispatch(setOpenCreateModifyProjectDialog(open));
     }, [open]);
 
     useEffect(() => {
@@ -53,13 +42,21 @@ export function Create_ModifyProjectDialog({open}){
     }, [projectToModify]);
 
     return (
-        <Dialog
-        fullScreen
-        open={openDialog}
-        TransitionComponent={Transition}
+        <Dialog open={openDialog}
         disableBackdropClick={disableForm}
-        onClose={handleCloseDialog}>
-            <DialogTitle id="form-dialog-title">{projectToModify ? "Modify" : "Create"} project</DialogTitle>
+        onClose={() => {
+            handleCloseDialog();         
+        }}
+        onExited={() => {
+            setProjectNameField(null);
+            setProjectDescriptionField(null);       
+            setError(null);     
+            setDisableForm(false);
+            if(projectToModify){
+                dispatch(setCurrentModifyingProject(null));
+            }
+        }}>
+            <DialogTitle id="form-dialog-title">Project action</DialogTitle>
             <form onSubmit={async (e) => {
                 e.preventDefault();
                 setDisableForm(true);
@@ -68,24 +65,20 @@ export function Create_ModifyProjectDialog({open}){
                 try {
                     // api call here
                     if(!projectToModify){
-                        const newProject = await AuthAxios.post(process.env.REACT_APP_API_URL + "/main-business/v1/project-management/project",
-                            {
-                                name: projectNameField,
-                                description: projectDescriptionField,
-                            }
-                        );
+                        const newProject = await APIWorker.postAPI("/main-business/v1/project-management/project", {
+                            name: projectNameField,
+                            description: projectDescriptionField,
+                        });
 
                         const { data } = newProject.data;    
                     }else{
                         if(!projectToModify.id || !Number.isInteger(projectToModify.id)){
                             throw new Error("project to modify have invalid id");
                         }
-                        const modifiedProject = await AuthAxios.patch(process.env.REACT_APP_API_URL + `/main-business/v1/project-management/project/${projectToModify.id}`,
-                            {
-                                name: projectNameField,
-                                description: projectDescriptionField,
-                            }
-                        );
+                        const modifiedProject = await APIWorker.patchAPI(`/main-business/v1/project-management/project/${projectToModify.id}`,{
+                            name: projectNameField,
+                            description: projectDescriptionField,
+                        });
 
                         const { data } = modifiedProject.data;
                     }  
@@ -95,7 +88,7 @@ export function Create_ModifyProjectDialog({open}){
                     // const roomLink = `/room/${data[0]._id}`;
                     // history.push(roomLink);
                 } catch (e) {
-                    //dispatch(setLoadingPrompt(null));
+                    dispatch(setLoadingPrompt(null));
                     setDisableForm(false);
                     setError(`There has been a problem while ${projectToModify ? "modifying" : "creating"} the project, please recheck your fields or internet connection`);
                     return;
@@ -161,15 +154,15 @@ export function Create_ModifyProjectDialog({open}){
                             </Grid>       
                         </Hidden>
                     </Grid>
-                    {error ? (
-                    <Grid container item xs={12} justify="center">
+                    {error ? (<Grid container item xs={12} justify="center">
                         <Alert severity="error">{error}</Alert>
-                    </Grid>
-                    ) : null}
+                    </Grid>) : null}
                 </Grid>
                 </DialogContent>
                 <DialogActions>
-                <Button onClick={handleCloseDialog} color="secondary">
+                <Button onClick={() => {
+                    handleCloseDialog();
+                }} color="secondary">
                     Close
                 </Button>
                 <Button

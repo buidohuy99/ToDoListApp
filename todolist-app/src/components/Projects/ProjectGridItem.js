@@ -6,7 +6,7 @@ import { FolderShared as ProjectIcon } from '@material-ui/icons';
 import { Link } from 'react-router-dom';
 
 import { useDispatch } from 'react-redux';
-import { setCurrentModifyingProject, setOpenState_CreateModifyProjectDialog } from '../../redux/projects/projectsSlice';
+import { setCurrentModifyingProject, setOpenCreateModifyProjectDialog } from '../../redux/dialogs/dialogSlice';
 
 const useStyles = makeStyles((theme) => ({
     projectName: {
@@ -100,7 +100,7 @@ export function ProjectGridItem({project}){
                             <Grid item>
                                 <Button variant='contained' color='secondary' size='small' onClick={() => {
                                     dispatch(setCurrentModifyingProject(project));
-                                    dispatch(setOpenState_CreateModifyProjectDialog(true));
+                                    dispatch(setOpenCreateModifyProjectDialog(true));
                                 }}>
                                     Modify
                                 </Button>

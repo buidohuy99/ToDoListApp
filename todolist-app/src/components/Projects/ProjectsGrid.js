@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Grid, withWidth, CircularProgress } from '@material-ui/core';
+import { Grid, withWidth, CircularProgress, useTheme } from '@material-ui/core';
 import { Pagination, Alert } from '@material-ui/lab';
 
 import { ProjectGridItem } from './ProjectGridItem';
-
-import { AuthAxios } from '../../contexts/auth';
 
 import { setCurrentProjects } from '../../redux/projects/projectsSlice';
 
 import signalR from '../../utils/signalR';
 
+import { GetAllProjects_Action } from '../../services/actions/projects/GetAllProjects_Action';
+
 function ProjectsGrid({width}){
     const dispatch = useDispatch();
+    const theme = useTheme();
 
     const maxProjectPerPage = /sm|md/.test(width) ? 8 : /xs/.test(width) ? 10 : 9;
     const [numOfPages, setNumOfPages] = useState(1);
@@ -31,9 +32,7 @@ function ProjectsGrid({width}){
             setPagesLoading(true);
             setProjectsLoading(true);
             try{      
-                const query = `PageNumber=${currentPage}&ItemPerPage=${maxProjectPerPage}`;
-                const search = searchString ? `&ProjectName=${searchString}` : '';
-                const results = await AuthAxios.get(process.env.REACT_APP_API_URL + `/main-business/v1/project-management/projects?` + query + search);
+                const results = await GetAllProjects_Action(currentPage, maxProjectPerPage, searchString);
                 const {data} = results.data;
                 dispatch(setCurrentProjects(data.projects));
                 setNumOfPages(data.totalPages);
@@ -41,9 +40,7 @@ function ProjectsGrid({width}){
                 if(e.response && e.response.status === 400 && e.response.data && e.response.data.data.newMaxPage){        
                     (async() => {
                         try{
-                            const query = `PageNumber=${e.response.data.data.newMaxPage}&ItemPerPage=${maxProjectPerPage}`;
-                            const search = searchString ? `&ProjectName=${searchString}` : '';
-                            const refetch = await AuthAxios.get(process.env.REACT_APP_API_URL + `/main-business/v1/project-management/projects?` + query + search); 
+                            const refetch = await GetAllProjects_Action(e.response.data.data.newMaxPage, maxProjectPerPage, searchString);
                             const {data} = refetch.data;
                             dispatch(setCurrentProjects(data.projects));
                             setCurrentPage(e.response.data.data.newMaxPage);
@@ -64,13 +61,10 @@ function ProjectsGrid({width}){
     }, [maxProjectPerPage, searchString]);
 
     const handleOnPaginationChange = async(event, pageNumber) => {
-        if(parseInt(pageNumber) === parseInt(currentPage)) return;
         setPagesLoading(true);
         setProjectsLoading(true);
         try{
-            const query = `PageNumber=${pageNumber}&ItemPerPage=${maxProjectPerPage}`;
-            const search = searchString ? `&ProjectName=${searchString}` : '';
-            const results = await AuthAxios.get(process.env.REACT_APP_API_URL + `/main-business/v1/project-management/projects?` + query + search);
+            const results = await GetAllProjects_Action(pageNumber, maxProjectPerPage, searchString); 
             const {data} = results.data;
             dispatch(setCurrentProjects(data.projects));
             setCurrentPage(pageNumber);
@@ -79,9 +73,7 @@ function ProjectsGrid({width}){
             if(e.response && e.response.status === 400 && e.response.data && e.response.data.data.newMaxPage){
                 (async() => {
                     try{
-                        const query = `PageNumber=${e.response.data.data.newMaxPage}&ItemPerPage=${maxProjectPerPage}`;
-                        const search = searchString ? `&ProjectName=${searchString}` : '';
-                        const refetch = AuthAxios.get(process.env.REACT_APP_API_URL + `/main-business/v1/project-management/projects?` + query + search); 
+                        const refetch = await GetAllProjects_Action(e.response.data.data.newMaxPage, maxProjectPerPage, searchString); 
                         const {data} = refetch.data;
                         dispatch(setCurrentProjects(data.projects));
                         setCurrentPage(e.response.data.data.newMaxPage);
@@ -104,31 +96,26 @@ function ProjectsGrid({width}){
         const updateGridStatus = (projects) => {
             setPagesLoading(true);
             if(searchString){
-                console.log('aaaaaaaaaa');
                 projects = projects.filter((value) => value.name.includes(searchString))
             }
             const pagesCount = parseInt(Math.ceil(projects.length/maxProjectPerPage));
             setNumOfPages(pagesCount);
-            if(currentPage >= pagesCount){
-                setProjectsLoading(true);
-                const newCurrentPage = currentPage > pagesCount ? pagesCount : currentPage;
-                const start = (currentPage - 1)*maxProjectPerPage;
-                dispatch(setCurrentProjects(projects.slice(start, Math.min(start + maxProjectPerPage, projects.length))));
-                if(newCurrentPage !== currentPage){
-                    setCurrentPage(newCurrentPage);
-                }
-                setProjectsLoading(false);
-            }         
+            setProjectsLoading(true);
+            const newCurrentPage = currentPage > pagesCount ? pagesCount : currentPage;
+            const start = (newCurrentPage - 1)*maxProjectPerPage;
+            dispatch(setCurrentProjects(projects.slice(start, Math.min(start + maxProjectPerPage, projects.length))));
+            setCurrentPage(newCurrentPage);
+            setProjectsLoading(false);
             setPagesLoading(false);
         }
 
         signalR.on("projects-list-changed", (data) => {
             updateGridStatus(data.projects);
         });
-    }, [searchString]);
+    }, [searchString, maxProjectPerPage, currentPage]);
 
     return (
-    <>
+    <React.Fragment>
         <Grid container item xs={12} spacing={2}>
             {error ? 
             <Grid container item xs={12} justify="center">
@@ -167,7 +154,7 @@ function ProjectsGrid({width}){
                 onChange={(e, p) => handleOnPaginationChange(e, p)}/>
             </Grid>
         }
-    </>);
+    </React.Fragment>);
 }
 
 export default withWidth()(ProjectsGrid);

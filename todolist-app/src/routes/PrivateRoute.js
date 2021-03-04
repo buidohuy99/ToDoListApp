@@ -1,6 +1,6 @@
 import React from 'react';
 import {Route, Redirect} from 'react-router-dom';
-import { useAuth } from "../contexts/auth";
+import { useAuth } from "../services/auth";
 
 // Make sure that for every component/page use private route, ALWAYS remember to CALL setAuthToken(null) inside "catch" clause of a try-catch on an AXIOS CALL to HANDLE THE ERROR of the AXIOS CALL
 

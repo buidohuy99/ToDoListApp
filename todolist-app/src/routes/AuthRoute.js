@@ -1,6 +1,6 @@
 import React from 'react';
 import {Route, Redirect} from 'react-router-dom';
-import { useAuth } from "../contexts/auth";
+import { useAuth } from "../services/auth";
 
 export default function AuthRoute({children, ...rest }) {
   const {access_token} = useAuth();

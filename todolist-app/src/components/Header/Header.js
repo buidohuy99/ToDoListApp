@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import Slide from '@material-ui/core/Slide';
 import PropTypes from 'prop-types';
 
-import { useAuth, uid_keyname } from '../../contexts/auth';
+import { useAuth, uid_keyname } from '../../services/auth';
 
 import { AppBar, Toolbar, Typography, IconButton, Button, Grid } from '@material-ui/core';
 import { makeStyles, useScrollTrigger } from "@material-ui/core";
@@ -106,7 +106,7 @@ export default function DefaultAppBar(props) {
     const navigationPanelOpenState = Boolean(useSelector((state) => state.navigation.isNavigationOpened));
 
     return (
-      <AppBar position='sticky' className={clsx(classes.appBar, {
+      <AppBar position="relative" className={clsx(classes.appBar, {
         [classes.appBarShift]: navigationPanelOpenState,
       })} style={{
         zIndex: 5,

@@ -7,7 +7,7 @@ import AuthRoute from './routes/AuthRoute';
 import { ProjectsView as Projects } from './pages/Projects';
 import { TasksCollection } from './pages/TasksCollection';
 import { Login } from './pages/Login';
-import { ProjectDetail } from './pages/ProjectDetail';
+import ProjectDetail from './pages/ProjectDetail';
 import { Profile } from './pages/Profile';
 
 import Header from './components/Header/Header';
@@ -19,23 +19,24 @@ import { ThemeProvider } from '@material-ui/styles';
 import { theme as pageTheme } from './themes/WebsiteThemePalette';
 
 import { useSelector, useDispatch } from 'react-redux';
-import { CssBaseline, Drawer, CircularProgress, IconButton, Divider, Backdrop, Grid, Typography } from '@material-ui/core';
+import { CssBaseline, Drawer, CircularProgress, Backdrop, Typography } from '@material-ui/core';
 import { makeStyles } from "@material-ui/core";
 
 import GlobalDrawer from './components/Drawer/Drawer';
 
 import {NAVIGATION_DRAWER_WIDTH} from './constants/constants';
 
-import {AuthProvider} from './contexts/auth';
-import { useEffect } from 'react';
-
-import signalR from './utils/signalR';
-import { setLoadingPrompt } from './redux/loading/loadingSlice';
+import {AuthProvider} from './services/auth';
 
 const useStyles = makeStyles((theme) => ({
   loadingBackdrop: {
-    position: 'fixed',
     zIndex: theme.zIndex.drawer + 1,
+    color: "#fff",
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflowY: 'hidden'
   },
   content: {
     flexGrow: 1,
@@ -85,12 +86,14 @@ function App() {
     <ThemeProvider theme={pageTheme}>
       <BrowserRouter>
         <AuthProvider>
-          <CssBaseline/>
-          <Header/>        
-          <GlobalDrawer/>
+          <header>
+            <CssBaseline/>
+            <Header/>
+          </header>              
           <main className={clsx(classes.content, {
             [classes.contentShift]: isDrawerOpen,
           })}>
+            <GlobalDrawer/>
             <Switch>
               <PrivateRoute exact path='/'>
                 <Projects/>
@@ -116,6 +119,10 @@ function App() {
                 <Profile/>
               </PrivateRoute>
 
+              <Route exact path='/test/project-detail' component={ProjectDetail}>
+                <ProjectDetail/>
+              </Route>
+
               <Route component={NotFoundPage}/>
             </Switch>
           </main>
@@ -124,29 +131,20 @@ function App() {
             [classes.footerShift]: isDrawerOpen,
           })}>
             <Footer />
-          </footer>      
+          </footer>
+          
         </AuthProvider>
-        <Backdrop
-            open={loadingPrompt !== null}
-            className={classes.loadingBackdrop}
-            style={{ color: "#fff"}}
-            >
-            <Grid container item justify="center" style={{ position: 'fixed' }}>
-              <Grid container item xs={12} className={classes.toolbar}>
-              </Grid>
-              <Grid container item xs={12} justify="center" style={{
-                marginBottom: 15,
-              }}>
-                <CircularProgress color="inherit" />
-              </Grid>
-              <Grid container item xs={12} justify="center">
-                <Typography variant="body1" style={{ color: "white", userSelect: 'none' }}>
-                  {loadingPrompt}
-                </Typography>
-              </Grid>
-            </Grid>
-          </Backdrop>
       </BrowserRouter>
+
+      <Backdrop open={loadingPrompt !== null}
+      className={classes.loadingBackdrop}>
+        <CircularProgress color="inherit" style={{
+          marginBottom: 15,
+        }}/>
+        <Typography variant="body1" style={{ color: "white", userSelect: 'none' }}>
+          {loadingPrompt}
+        </Typography>
+      </Backdrop>
     </ThemeProvider>
   );
 }
