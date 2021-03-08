@@ -13,7 +13,6 @@ export function Create_ModifyProjectDialog({open}){
     const dispatch = useDispatch();
 
     const [disableForm, setDisableForm] = useState(false);
-    
     const [error, setError] = useState(null);
 
     //Form informations

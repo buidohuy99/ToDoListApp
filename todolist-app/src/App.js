@@ -21,7 +21,7 @@ import { theme as pageTheme } from './themes/WebsiteThemePalette';
 
 import { useSelector, useDispatch } from 'react-redux';
 import { CssBaseline, Grid, CircularProgress, Backdrop, Typography } from '@material-ui/core';
-import { makeStyles } from "@material-ui/core";
+import { makeStyles, useTheme } from "@material-ui/core";
 
 import GlobalDrawer from './components/Drawer/Drawer';
 
@@ -80,6 +80,7 @@ const useStyles = makeStyles((theme) => ({
 
 function App() {
   const classes = useStyles();
+  const theme = useTheme();
 
   const isDrawerOpen = Boolean(useSelector((state) => state.navigation.isNavigationOpened));
   const loadingPrompt = useSelector((state) => state.loading.loadingPrompt);

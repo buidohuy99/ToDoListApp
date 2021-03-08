@@ -6,10 +6,16 @@ export const dialogSlice = createSlice({
     openCreateModifyProjectDialog: false,
     currentModifyingProject: null,
     
-    parentProject: null,
-
     currentModifyingTask: null,
     openAddModifyTaskDialog: false,
+
+    openAssignUsersDialog: false,
+    usersListOfAssignDialog: null,
+    participantsOfAssignDialog: null,
+    isDialogInSearchMode: false,
+    isLoadingUsersList: false,
+
+    parentProject: null,
   },
   reducers: {
     setCurrentModifyingProject: (state, action) => {
@@ -24,14 +30,32 @@ export const dialogSlice = createSlice({
     },
 
     setCurrentModifyingTask: (state, action) => {
-        state.currentModifyingTask = action.payload ? action.payload : null;
+      state.currentModifyingTask = action.payload ? action.payload : null;
     },
     setOpenAddModifyTaskDialog: (state, action) => {
-        state.openAddModifyTaskDialog = Boolean(action.payload);
+      state.openAddModifyTaskDialog = Boolean(action.payload);
     },
+
+    setOpenAssignUsersDialog: (state, action) => {
+      state.openAssignUsersDialog = Boolean(action.payload);
+    },
+    setIsDialogInSearchMode: (state, action) => {
+      state.isDialogInSearchMode = Boolean(action.payload);
+    },
+    setUserListsForAssignDialog: (state, action) => {
+      state.usersListOfAssignDialog = action.payload ? action.payload : null;
+    },
+    setParticipantsOfAssignDialog: (state, action) => {
+      state.participantsOfAssignDialog = action.payload ? action.payload : null;
+    },
+    setIsLoadingUsersList: (state, action) => {
+      state.isLoadingUsersList = Boolean(action.payload);
+    }
   },
 });
 
-export const { setCurrentModifyingProject, setOpenCreateModifyProjectDialog, setParentProject, setCurrentModifyingTask, setOpenAddModifyTaskDialog } = dialogSlice.actions;
+export const { setCurrentModifyingProject, setOpenCreateModifyProjectDialog, setParentProject, 
+  setCurrentModifyingTask, setOpenAddModifyTaskDialog, setOpenAssignUsersDialog, setIsDialogInSearchMode, 
+  setUserListsForAssignDialog, setParticipantsOfAssignDialog, setIsLoadingUsersList } = dialogSlice.actions;
 
 export default dialogSlice.reducer;

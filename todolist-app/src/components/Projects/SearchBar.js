@@ -22,9 +22,7 @@ export function SearchBar({searchBarPlaceholder}){
                 endAdornment={
                 <InputAdornment position="end">
                     <IconButton
-                    aria-label="toggle password visibility"
                     onClick={() => {
-                        console.log('searched');
                         dispatch(setGlobalSearchString(searchString));
                     }}>          
                         <SearchIcon/>                          

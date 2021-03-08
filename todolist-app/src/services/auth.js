@@ -3,7 +3,7 @@ import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useHistory } from 'react-router-dom';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { setLoadingPrompt } from '../redux/loading/loadingSlice';
+import { setLoadingPrompt, setIsConnecting } from '../redux/loading/loadingSlice';
 
 import { useSignalR, signalR as SR } from './signalR';
 
@@ -29,7 +29,7 @@ export function AuthProvider({children}){
     const dispatch = useDispatch();
     const history = useHistory();
 
-    const { signalR, tryConnectToServer } = useSignalR();
+    const { signalR } = useSignalR();
     const isConnecting = useSelector((state) => state.loading.isConnecting);
 
     const updateAccessToken = async () => {
@@ -124,6 +124,7 @@ export function AuthProvider({children}){
     };
 
     const recheckAccessToken = async() => {
+        if(signalR.state === SR.HubConnectionState.Disconnected) return;
         let existingToken = localStorage.getItem(accesstoken_keyname);
         if(existingToken && existingToken !== 'null'){
             dispatch(setLoadingPrompt("Checking your login credentials, please wait..."));

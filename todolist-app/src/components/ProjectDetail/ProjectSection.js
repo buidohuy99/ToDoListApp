@@ -33,6 +33,7 @@ export function ProjectSection({section}){
                     <Typography variant="body2" style={{
                         fontWeight: section && section.name ? 'bold' : 'normal',
                         fontStyle: section && section.name ? 'normal' : 'italic',
+                        overflowWrap: 'break-word',
                     }}>
                         {section && section.name ? section.name : 'Project doesnt have a name' }
                     </Typography>

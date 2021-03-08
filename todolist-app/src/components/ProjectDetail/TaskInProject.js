@@ -29,6 +29,7 @@ export function TaskInProject({isNested, task}){
             }}>
                 <Typography variant="body1" style={{
                     fontStyle: task && task.name ? 'normal' : 'italic',
+                    overflowWrap: 'break-word',
                 }}>
                     {task && task.name ? task.name : "This task is empty"}
                 </Typography>

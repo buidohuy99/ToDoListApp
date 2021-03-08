@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setCurrentPage } from '../redux/navigation/navigationSlice';
 import { setLoadingPrompt }  from '../redux/loading/loadingSlice';
 import { setCurrentViewingProject } from '../redux/projectDetail/projectDetailSlice';
-import { setOpenAddModifyTaskDialog, setOpenCreateModifyProjectDialog, setParentProject, setCurrentModifyingProject, setCurrentModifyingTask } from '../redux/dialogs/dialogSlice';
+import { setOpenAddModifyTaskDialog, setOpenCreateModifyProjectDialog, setParentProject, setCurrentModifyingProject, setCurrentModifyingTask, setOpenAssignUsersDialog } from '../redux/dialogs/dialogSlice';
 
 import { useHistory, useParams } from 'react-router-dom';
 
@@ -18,6 +18,7 @@ import { AddCommentOutlined, PostAddOutlined, CreateOutlined, GroupOutlined } fr
 
 import { Create_ModifyProjectDialog } from '../components/Dialogs/Create_ModifyProjectDialog';
 import { Add_ModifyTaskDialog } from '../components/Dialogs/Add_ModifyTaskDialog';
+import { AssignUsersDialog } from '../components/Dialogs/AssignUsersDialog/AssignUsersDialog';
 
 import { APIWorker } from '../services/axios';
 
@@ -165,7 +166,8 @@ function ProjectDetail({width}){
                     <Grid item>
                         <Tooltip title="Assign users">
                             <IconButton size="medium" onClick={() => {
-                            
+                                dispatch(setParentProject(currentViewingProject));
+                                dispatch(setOpenAssignUsersDialog(true));
                             }}>
                                 <GroupOutlined />
                             </IconButton>
@@ -179,6 +181,7 @@ function ProjectDetail({width}){
         }
         <Create_ModifyProjectDialog />
         <Add_ModifyTaskDialog />
+        <AssignUsersDialog />
     </Container>);
 }
 
