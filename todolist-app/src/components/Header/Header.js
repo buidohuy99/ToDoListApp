@@ -8,7 +8,7 @@ import { useAuth, uid_keyname } from '../../services/auth';
 import { AppBar, Toolbar, Typography, IconButton, Button, Grid } from '@material-ui/core';
 import { makeStyles, useScrollTrigger } from "@material-ui/core";
 import { Menu as MenuIcon } from "@material-ui/icons";
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 
 import { NAVIGATION_DRAWER_WIDTH } from '../../constants/constants';
 
@@ -88,6 +88,7 @@ HideOnScroll.propTypes = {
 
 export default function DefaultAppBar(props) {
     const dispatch = useDispatch();
+    const history = useHistory();
 
     const classes = useStyles();
     const { access_token, set_access_token } = useAuth();
@@ -164,18 +165,22 @@ export default function DefaultAppBar(props) {
                     <Button
                       className={classes.defaultButton}
                       color="inherit"
-                      href="/signup"
+                      onClick={() => {
+                        history.push("/signup");
+                      }}
                     >
-                    Sign Up
+                      Sign Up
                     </Button>
                   </Grid>
                   <Grid item>
                     <Button
                     className={classes.defaultButton}
                     color="inherit"
-                    href="/login"
+                    onClick={() => {
+                      history.push("/login");
+                    }}
                     >
-                    Login
+                      Login
                     </Button>
                   </Grid>
                 </Grid>

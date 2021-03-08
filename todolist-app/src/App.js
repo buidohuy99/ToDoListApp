@@ -7,6 +7,7 @@ import AuthRoute from './routes/AuthRoute';
 import { ProjectsView as Projects } from './pages/Projects';
 import { TasksCollection } from './pages/TasksCollection';
 import { Login } from './pages/Login';
+import { SignUp } from './pages/SignUp';
 import ProjectDetail from './pages/ProjectDetail';
 import { Profile } from './pages/Profile';
 
@@ -105,6 +106,10 @@ function App() {
 
                 <AuthRoute exact path='/login'>
                   <Login/>
+                </AuthRoute>
+
+                <AuthRoute exact path='/signup'>
+                  <SignUp/>
                 </AuthRoute>
 
                 <PrivateRoute exact path='/projects'>

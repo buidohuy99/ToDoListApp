@@ -12,7 +12,7 @@ import { setLoadingPrompt } from '../redux/loading/loadingSlice';
 import {useAuth, accesstoken_keyname, uid_keyname} from '../services/auth';
 import { APIWorker } from '../services/axios';
 
-import {Link as RouterLink, Redirect} from 'react-router-dom';
+import {Link as RouterLink} from 'react-router-dom';
 
 import { LOGIN_PAGE } from '../constants/constants';
 
@@ -96,10 +96,6 @@ export function Login(props){
         setDisableForm(false);
       }
     }, []);
-
-    // if(access_token){
-    //   return (<Redirect to="/" />);
-    // }
 
     return (
       <Container component="main" maxWidth="xs">
