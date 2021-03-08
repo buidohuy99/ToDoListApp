@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 
-import { Paper, ListItem, ListItemIcon, ListItemText, makeStyles, IconButton, Icon } from '@material-ui/core';
+import { Paper, ListItem, ListItemIcon, ListItemText, makeStyles, IconButton, Typography } from '@material-ui/core';
 import { FiberManualRecord } from '@material-ui/icons';
 
 const useStyles = makeStyles((theme) => ({
@@ -12,7 +12,7 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-export function TaskInProject({isNested}){
+export function TaskInProject({isNested, task}){
     const classes = useStyles();
 
     return (
@@ -27,7 +27,11 @@ export function TaskInProject({isNested}){
             <ListItemText style={{
                 userSelect: 'none'
             }}>
-                Task Item
+                <Typography variant="body1" style={{
+                    fontStyle: task && task.name ? 'normal' : 'italic',
+                }}>
+                    {task && task.name ? task.name : "This task is empty"}
+                </Typography>
             </ListItemText>
         </ListItem>
     );

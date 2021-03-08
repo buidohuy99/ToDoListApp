@@ -1,38 +1,117 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { setCurrentPage } from '../redux/navigation/navigationSlice';
+import { setLoadingPrompt }  from '../redux/loading/loadingSlice';
+import { setCurrentViewingProject } from '../redux/projectDetail/projectDetailSlice';
+import { setOpenAddModifyTaskDialog, setOpenCreateModifyProjectDialog, setParentProject, setCurrentModifyingProject, setCurrentModifyingTask } from '../redux/dialogs/dialogSlice';
 
 import { useHistory, useParams } from 'react-router-dom';
 
 import { PROJECT_DETAIL_PAGE } from '../constants/constants';
 
-import { ProjectSection } from '../components/ProjectDetail/ProjectSection';
-import { TaskInProject } from '../components/ProjectDetail/TaskInProject';
+import { ProjectItemsList } from '../components/ProjectDetail/ProjectItemsList';
 
-import { Container, Grid, Typography, withWidth, useTheme, IconButton } from '@material-ui/core';
-import { List, ListSubheader } from '@material-ui/core';
+import { Container, Grid, Typography, withWidth, useTheme, IconButton, Tooltip } from '@material-ui/core';
 import { Alert } from '@material-ui/lab';
-import { AddCommentOutlined, PostAddOutlined, MoreVertOutlined } from '@material-ui/icons';
+import { AddCommentOutlined, PostAddOutlined, CreateOutlined, GroupOutlined } from '@material-ui/icons';
 
 import { Create_ModifyProjectDialog } from '../components/Dialogs/Create_ModifyProjectDialog';
 import { Add_ModifyTaskDialog } from '../components/Dialogs/Add_ModifyTaskDialog';
+
+import { APIWorker } from '../services/axios';
+
+import { useSignalR } from '../services/signalR';
+import { useAuth } from '../services/auth';
 
 function ProjectDetail({width}){
     const dispatch = useDispatch();
     const params = useParams();
     const theme = useTheme();
+    const history = useHistory();
+    const { signalR } = useSignalR();
+    const { set_access_token } = useAuth();
+
+    const [error, setError] = useState(null);
+    
+    const getProjectDetail = async() => {
+        try{
+            const result = await APIWorker.callAPI('get', `/main-business/v1/project-management/project/${params.project_id}`);
+            const {data} = result.data;
+            if(data.parent){
+                throw new Error("Project isnt available for viewing");
+            }
+            dispatch(setCurrentViewingProject(data));
+            try{
+                await signalR.invoke("RegisterViewProject", data.id);
+                dispatch(setLoadingPrompt(null));
+                return;
+            }catch(e){
+                console.log(e);
+                setError("A problem occurred while connecting to the server, please reload or check the internet");
+            }
+        } catch (e) {
+            console.log(e);
+            setError("A problem occurred while fetching the details for the requested project");
+        }
+        dispatch(setLoadingPrompt("An error occurred, redirecting to home..."));
+        history.push('/');
+        dispatch(setLoadingPrompt(null));    
+    };
 
     const currentViewingProject = useSelector((state) => state.projectDetail.currentViewingProject);
+    const isConnecting = useSelector((state) => state.loading.isConnecting);
     
     useEffect(() => {
-        dispatch(setCurrentPage(PROJECT_DETAIL_PAGE));
+        signalR.on("project-detail-changed", (data) => {
+            dispatch(setCurrentViewingProject(data.projectDetail));
+        });
+    }, []);
 
+    useEffect(() => {
+        if(!isConnecting){
+            dispatch(setLoadingPrompt("Fetching project details...."));
+            dispatch(setCurrentPage(PROJECT_DETAIL_PAGE));
+            
+            const submitRemoveViewingProject = async () => {
+                dispatch(setLoadingPrompt("Submitting some data to the server...."));
+                try{
+                    await signalR.invoke("RemoveFromViewingProject", parseInt(params.project_id))
+                }catch(e){
+                    setError("A problem occurred while connecting to the server, please check the internet");
+                    set_access_token(null);
+                }
+                dispatch(setCurrentViewingProject(null));
+                dispatch(setLoadingPrompt(null));
+            }
+
+            const unlisten = history.listen(() => {
+                submitRemoveViewingProject();
+            });
+
+            getProjectDetail();
+
+            return () => {
+                unlisten();
+            };
+        }
+    }, [isConnecting, params.project_id]);
+
+    // use effect to fetch details at the start
+    useEffect(() => {
+        
     }, []);
 
     return (<Container maxWidth="md">
         {
-            currentViewingProject ? 
+            error?
+            <Grid container item xs={12} justify="center">
+                <Alert severity="error">
+                    {error}
+                </Alert>
+            </Grid>
+            :
+            !currentViewingProject ? 
             <Grid container item xs={12} justify="center">
                 <Alert severity="info">
                     There is no information to display here...
@@ -51,63 +130,51 @@ function ProjectDetail({width}){
                 </Grid>
                 {/* functional buttons */}
                 <Grid container item xs={12} sm={6} justify={/xs/.test(width) ? "center" : "flex-end"} alignContent="center" spacing={1}>
+                    {/* add new task */}
                     <Grid item>
-                        <IconButton size="medium">
-                            <AddCommentOutlined />
-                        </IconButton>
+                        <Tooltip title="Add task">
+                            <IconButton size="medium" onClick={() => {
+                                dispatch(setOpenAddModifyTaskDialog(true));
+                            }}>
+                                <AddCommentOutlined />
+                            </IconButton>
+                        </Tooltip>
+                    </Grid>
+                    {/* add child project */}
+                    <Grid item>
+                        <Tooltip title="Add child project">
+                            <IconButton size="medium" onClick={() => {
+                                dispatch(setParentProject(currentViewingProject));
+                                dispatch(setOpenCreateModifyProjectDialog(true));
+                            }}>
+                                <PostAddOutlined />
+                            </IconButton>
+                        </Tooltip>
+                    </Grid>
+                    {/* modify project infos */}
+                    <Grid item>
+                        <Tooltip title="Modify project info">
+                            <IconButton size="medium" onClick={() => {
+                                dispatch(setCurrentModifyingProject(currentViewingProject));
+                                dispatch(setOpenCreateModifyProjectDialog(true));
+                            }}>
+                                <CreateOutlined />
+                            </IconButton>
+                        </Tooltip>
                     </Grid>
                     <Grid item>
-                        <IconButton size="medium">
-                            <PostAddOutlined />
-                        </IconButton>
-                    </Grid>
-                    <Grid item>
-                        <IconButton size="medium">
-                            <MoreVertOutlined />
-                        </IconButton>
+                        <Tooltip title="Assign users">
+                            <IconButton size="medium" onClick={() => {
+                            
+                            }}>
+                                <GroupOutlined />
+                            </IconButton>
+                        </Tooltip>
                     </Grid>
                 </Grid>
+
                 { /* List of subprojects and tasks here */ }
-                <Grid container item xs={12} spacing={1}>
-                    <List subheader={
-                        <ListSubheader component={Grid} xs={12} item>
-                            <Typography variant="body1">
-                                {currentViewingProject && currentViewingProject.description ? currentViewingProject.description : "this project doesnt have a description"}
-                            </Typography>
-                        </ListSubheader>
-                    } component={Grid} container item spacing={1}>
-                        {/* print out all tasks in project first */}
-                        <Grid item xs={12}>
-                            <List subheader={
-                                <ListSubheader component={Grid} xs={12} item>
-                                    Tasks ~~    
-                                </ListSubheader>
-                            } component={Grid} item>
-
-                                {/* Run loop here */}
-                                <Grid item xs={12}>
-                                    <TaskInProject/>
-                                </Grid>
-
-                            </List>
-                        </Grid>
-                        {/* print out child projects later*/}
-                        <Grid item xs={12}>
-                            <List subheader={
-                                <ListSubheader component={Grid} xs={12} item>
-                                    Grouped tasks...   
-                                </ListSubheader>
-                            } component={Grid} item>
-
-                                {/* Run loop here */}
-                                <Grid item xs={12}>
-                                    <ProjectSection/>
-                                </Grid>
-
-                            </List>
-                        </Grid>
-                    </List>
-                </Grid>
+                <ProjectItemsList />
             </Grid>
         }
         <Create_ModifyProjectDialog />

@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 
-import { BrowserRouter, Switch, Route} from "react-router-dom";
+import { BrowserRouter, Switch, Route } from "react-router-dom";
 import PrivateRoute from './routes/PrivateRoute';
 import AuthRoute from './routes/AuthRoute';
 
@@ -19,14 +19,15 @@ import { ThemeProvider } from '@material-ui/styles';
 import { theme as pageTheme } from './themes/WebsiteThemePalette';
 
 import { useSelector, useDispatch } from 'react-redux';
-import { CssBaseline, Drawer, CircularProgress, Backdrop, Typography } from '@material-ui/core';
+import { CssBaseline, Grid, CircularProgress, Backdrop, Typography } from '@material-ui/core';
 import { makeStyles } from "@material-ui/core";
 
 import GlobalDrawer from './components/Drawer/Drawer';
 
 import {NAVIGATION_DRAWER_WIDTH} from './constants/constants';
 
-import {AuthProvider} from './services/auth';
+import { AuthProvider } from './services/auth';
+import { SignalRProvider } from './services/signalR';
 
 const useStyles = makeStyles((theme) => ({
   loadingBackdrop: {
@@ -85,66 +86,68 @@ function App() {
   return (
     <ThemeProvider theme={pageTheme}>
       <BrowserRouter>
-        <AuthProvider>
-          <header>
-            <CssBaseline/>
-            <Header/>
-          </header>              
-          <main className={clsx(classes.content, {
-            [classes.contentShift]: isDrawerOpen,
-          })}>
-            <GlobalDrawer/>
-            <Switch>
-              <PrivateRoute exact path='/'>
-                <Projects/>
-              </PrivateRoute>
+        <SignalRProvider>
+          <AuthProvider>  
+            <header>
+              <CssBaseline/>
+              <Header/>
+            </header>              
+            <main className={clsx(classes.content, {
+              [classes.contentShift]: isDrawerOpen,
+            })}>
+              <Grid item xs={12} className={classes.toolbar}>
+              </Grid>
+              <GlobalDrawer/>
+              <Switch>
+                <PrivateRoute exact path='/'>
+                  <Projects/>
+                </PrivateRoute>
 
-              <AuthRoute exact path='/login'>
-                <Login/>
-              </AuthRoute>
+                <AuthRoute exact path='/login'>
+                  <Login/>
+                </AuthRoute>
 
-              <PrivateRoute exact path='/projects'>
-                <Projects/>
-              </PrivateRoute>
+                <PrivateRoute exact path='/projects'>
+                  <Projects/>
+                </PrivateRoute>
 
-              <PrivateRoute exact path='/project/:project_id'>
-                <ProjectDetail/>
-              </PrivateRoute>
+                <PrivateRoute exact path='/project/:project_id'>
+                  <ProjectDetail/>
+                </PrivateRoute>
 
-              <PrivateRoute exact path='/tasks/:tasks_group'>
-                <TasksCollection/>
-              </PrivateRoute>
+                <PrivateRoute exact path='/tasks/:tasks_group'>
+                  <TasksCollection/>
+                </PrivateRoute>
 
-              <PrivateRoute exact path='/profile'>
-                <Profile/>
-              </PrivateRoute>
+                <PrivateRoute exact path='/profile'>
+                  <Profile/>
+                </PrivateRoute>
+                
+                <Route component={NotFoundPage}/>
+              </Switch>
+            </main>
 
-              <Route exact path='/test/project-detail' component={ProjectDetail}>
-                <ProjectDetail/>
-              </Route>
+            <footer className={clsx(classes.footer, {
+              [classes.footerShift]: isDrawerOpen,
+            })}>
+              <Footer />
+            </footer>
 
-              <Route component={NotFoundPage}/>
-            </Switch>
-          </main>
+            <Backdrop open={loadingPrompt !== null}
+              className={classes.loadingBackdrop}>
+              <CircularProgress color="inherit" style={{
+                marginBottom: 15,
+              }}/>
+              <Typography variant="body1" style={{ color: "white", userSelect: 'none' }}>
+                {loadingPrompt}
+              </Typography>
+            </Backdrop>
+            
+          </AuthProvider>     
+        </SignalRProvider>
 
-          <footer className={clsx(classes.footer, {
-            [classes.footerShift]: isDrawerOpen,
-          })}>
-            <Footer />
-          </footer>
-          
-        </AuthProvider>
+        
       </BrowserRouter>
-
-      <Backdrop open={loadingPrompt !== null}
-      className={classes.loadingBackdrop}>
-        <CircularProgress color="inherit" style={{
-          marginBottom: 15,
-        }}/>
-        <Typography variant="body1" style={{ color: "white", userSelect: 'none' }}>
-          {loadingPrompt}
-        </Typography>
-      </Backdrop>
     </ThemeProvider>
   );
 }

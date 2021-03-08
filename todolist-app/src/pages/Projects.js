@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { setCurrentPage } from '../redux/navigation/navigationSlice';
 
 import { PROJECTS_PAGE } from '../constants/constants';
@@ -54,12 +54,11 @@ export function ProjectsView(){
     <Container maxWidth="lg">
         <Grid container justify="center" spacing={2}>
             <Grid item xs={12} sm={10} md={5} lg={4}>
-                <Grid container item xs={12} spacing={3} justify="center" style={{
-                }}>
+                <Grid container item xs={12} spacing={3} justify="center">
                     <Grid container item xs={12} justify="center">
                         <Button variant='contained' color='secondary' size='large' onClick={() => {
                             dispatch(setOpenCreateModifyProjectDialog(true));
-                        }}>
+                        }} >
                             Create a new project...
                         </Button>
                     </Grid>

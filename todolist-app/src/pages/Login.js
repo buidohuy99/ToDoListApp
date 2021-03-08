@@ -12,11 +12,11 @@ import { setLoadingPrompt } from '../redux/loading/loadingSlice';
 import {useAuth, accesstoken_keyname, uid_keyname} from '../services/auth';
 import { APIWorker } from '../services/axios';
 
-import {Link as RouterLink} from 'react-router-dom';
+import {Link as RouterLink, Redirect} from 'react-router-dom';
 
 import { LOGIN_PAGE } from '../constants/constants';
 
-import signalR from '../utils/signalR';
+import { useSignalR } from '../services/signalR';
 
 const useStyles = makeStyles((theme) => ({
     paper: {
@@ -42,7 +42,8 @@ export function Login(props){
     const classes = useStyles();
 
     const [isError, setIsError] = useState(false);
-    const { set_access_token } = useAuth();
+    const { set_access_token, access_token } = useAuth();
+    const { signalR } = useSignalR();
     const dispatch = useDispatch();
 
     //Login infos
@@ -95,6 +96,10 @@ export function Login(props){
         setDisableForm(false);
       }
     }, []);
+
+    // if(access_token){
+    //   return (<Redirect to="/" />);
+    // }
 
     return (
       <Container component="main" maxWidth="xs">

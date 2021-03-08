@@ -41,6 +41,9 @@ export function Add_ModifyTaskDialog({open}){
 
     return (
         <Dialog
+        style={{
+            zIndex: 8,
+        }}
         open={openDialog}
         disableBackdropClick={disableForm}
         onClose={handleCloseDialog}
@@ -93,7 +96,7 @@ export function Add_ModifyTaskDialog({open}){
                     <br />
                 </DialogContentText>
                 <Grid container item xs={12}>
-                    <Grid container item xs={12} sm={8} direction="column">
+                    <Grid container item xs={12} direction="column">
                         <Grid item>
                             <TextField
                                 variant="outlined"

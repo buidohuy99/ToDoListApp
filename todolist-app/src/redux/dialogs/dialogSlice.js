@@ -5,6 +5,8 @@ export const dialogSlice = createSlice({
   initialState: {
     openCreateModifyProjectDialog: false,
     currentModifyingProject: null,
+    
+    parentProject: null,
 
     currentModifyingTask: null,
     openAddModifyTaskDialog: false,
@@ -17,6 +19,10 @@ export const dialogSlice = createSlice({
       state.openCreateModifyProjectDialog = Boolean(action.payload);
     },
 
+    setParentProject: (state, action) => {
+      state.parentProject = action.payload ? action.payload : null;
+    },
+
     setCurrentModifyingTask: (state, action) => {
         state.currentModifyingTask = action.payload ? action.payload : null;
     },
@@ -26,6 +32,6 @@ export const dialogSlice = createSlice({
   },
 });
 
-export const { setCurrentModifyingProject, setOpenCreateModifyProjectDialog, setCurrentModifyingTask, setOpenAddModifyTaskDialog } = dialogSlice.actions;
+export const { setCurrentModifyingProject, setOpenCreateModifyProjectDialog, setParentProject, setCurrentModifyingTask, setOpenAddModifyTaskDialog } = dialogSlice.actions;
 
 export default dialogSlice.reducer;

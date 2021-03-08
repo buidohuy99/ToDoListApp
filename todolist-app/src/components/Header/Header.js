@@ -16,7 +16,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { setLoadingPrompt } from '../../redux/loading/loadingSlice';
 import { setNavigationOpenState } from '../../redux/navigation/navigationSlice';
 
-import signalR from '../../utils/signalR';
+import { useSignalR } from '../../services/signalR';
 
 const useStyles = makeStyles((theme) => ({
   title: {
@@ -91,6 +91,7 @@ export default function DefaultAppBar(props) {
 
     const classes = useStyles();
     const { access_token, set_access_token } = useAuth();
+    const { signalR } = useSignalR();
 
     const handleLogOut = async () => {
       dispatch(setLoadingPrompt("Logging you out..."));
@@ -106,7 +107,7 @@ export default function DefaultAppBar(props) {
     const navigationPanelOpenState = Boolean(useSelector((state) => state.navigation.isNavigationOpened));
 
     return (
-      <AppBar position="relative" className={clsx(classes.appBar, {
+      <AppBar position="fixed" className={clsx(classes.appBar, {
         [classes.appBarShift]: navigationPanelOpenState,
       })} style={{
         zIndex: 5,

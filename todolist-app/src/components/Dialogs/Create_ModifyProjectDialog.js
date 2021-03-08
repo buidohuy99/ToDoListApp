@@ -1,18 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useHistory } from 'react-router-dom';
 
 import { APIWorker } from '../../services/axios';
 
-import { Slide, Dialog, DialogTitle, Grid, TextField, DialogActions, DialogContent, DialogContentText, Button, Hidden } from '@material-ui/core';
+import { Dialog, DialogTitle, Grid, TextField, DialogActions, DialogContent, DialogContentText, Button, Hidden } from '@material-ui/core';
 import { Alert } from '@material-ui/lab';
 
 import { setLoadingPrompt } from '../../redux/loading/loadingSlice';
-import { setCurrentModifyingProject, setOpenCreateModifyProjectDialog } from '../../redux/dialogs/dialogSlice';
+import { setCurrentModifyingProject, setOpenCreateModifyProjectDialog, setParentProject } from '../../redux/dialogs/dialogSlice';
 
 export function Create_ModifyProjectDialog({open}){
     const dispatch = useDispatch();
-    const history = useHistory();
 
     const [disableForm, setDisableForm] = useState(false);
     
@@ -23,6 +21,7 @@ export function Create_ModifyProjectDialog({open}){
     const [projectDescriptionField, setProjectDescriptionField] = useState(null);
 
     const projectToModify = useSelector((state) => state.dialog.currentModifyingProject);
+    const parentProjectOfDialog = useSelector((state) => state.dialog.parentProject);
     const openDialog = useSelector((state) => state.dialog.openCreateModifyProjectDialog);
 
     const handleCloseDialog = () => {   
@@ -42,7 +41,11 @@ export function Create_ModifyProjectDialog({open}){
     }, [projectToModify]);
 
     return (
-        <Dialog open={openDialog}
+        <Dialog 
+        style={{
+            zIndex: 8,
+        }}
+        open={openDialog}
         disableBackdropClick={disableForm}
         onClose={() => {
             handleCloseDialog();         
@@ -55,8 +58,11 @@ export function Create_ModifyProjectDialog({open}){
             if(projectToModify){
                 dispatch(setCurrentModifyingProject(null));
             }
+            if(parentProjectOfDialog){
+                dispatch(setParentProject(null));
+            }
         }}>
-            <DialogTitle id="form-dialog-title">Project action</DialogTitle>
+            <DialogTitle id="form-dialog-title">{parentProjectOfDialog ? "Children project" : "Project"}</DialogTitle>
             <form onSubmit={async (e) => {
                 e.preventDefault();
                 setDisableForm(true);
@@ -68,6 +74,7 @@ export function Create_ModifyProjectDialog({open}){
                         const newProject = await APIWorker.postAPI("/main-business/v1/project-management/project", {
                             name: projectNameField,
                             description: projectDescriptionField,
+                            parentId: parentProjectOfDialog && parentProjectOfDialog.id && Number.isInteger(parentProjectOfDialog.id) ? parseInt(parentProjectOfDialog.id) : undefined
                         });
 
                         const { data } = newProject.data;    
@@ -78,6 +85,7 @@ export function Create_ModifyProjectDialog({open}){
                         const modifiedProject = await APIWorker.patchAPI(`/main-business/v1/project-management/project/${projectToModify.id}`,{
                             name: projectNameField,
                             description: projectDescriptionField,
+                            parentId: parentProjectOfDialog && parentProjectOfDialog.id && Number.isInteger(parentProjectOfDialog.id) ? parseInt(parentProjectOfDialog.id) : undefined
                         });
 
                         const { data } = modifiedProject.data;
@@ -96,8 +104,9 @@ export function Create_ModifyProjectDialog({open}){
             }}>
                 <DialogContent>
                 <DialogContentText>
-                    Enter these information below to {projectToModify ? 'modify' : 'create'} a project:
-                    <br />
+                    {
+                        `Enter these information below to ${projectToModify ? 'modify' : 'create'} a ${parentProjectOfDialog ? 'child' : ''} project:`
+                    }
                 </DialogContentText>
                 <Grid container item xs={12}>
                     <Grid container item xs={12} sm={8} direction="column">
@@ -121,7 +130,9 @@ export function Create_ModifyProjectDialog({open}){
                                 margin="normal"
                             />
                         </Grid>
-                        <Grid item>
+                        <Grid item style={{
+                            display: parentProjectOfDialog ? 'none' : 'block'
+                        }}>
                             <TextField
                                 variant="outlined"
                                 autoFocus
@@ -147,7 +158,7 @@ export function Create_ModifyProjectDialog({open}){
                                 <img
                                 src={
                                     process.env.PUBLIC_URL +
-                                    "Create_ModifyRoomDialog/green_board.png"
+                                    "/green_board.png"
                                 }
                                 alt="BigCuteImage"
                                 width="100%"/>

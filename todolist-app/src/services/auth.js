@@ -2,10 +2,10 @@ import { createContext, useContext, useState, useEffect, useRef } from 'react';
 
 import { useHistory } from 'react-router-dom';
 
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setLoadingPrompt } from '../redux/loading/loadingSlice';
 
-import signalR from '../utils/signalR';
+import { useSignalR, signalR as SR } from './signalR';
 
 import {AuthAxios} from './axios';
 
@@ -29,8 +29,8 @@ export function AuthProvider({children}){
     const dispatch = useDispatch();
     const history = useHistory();
 
-    // signalR connection to server
-    let connection = useRef(null);
+    const { signalR, tryConnectToServer } = useSignalR();
+    const isConnecting = useSelector((state) => state.loading.isConnecting);
 
     const updateAccessToken = async () => {
         try{
@@ -44,6 +44,8 @@ export function AuthProvider({children}){
           return null;
         }
     }
+
+
 
     // interceptor to add authorization header to request
     const default_request_interceptor = AuthAxios.interceptors.request.use(
@@ -121,48 +123,45 @@ export function AuthProvider({children}){
         set_access_token: setToken
     };
 
-    useEffect(() => { 
-
-        const recheckAccessToken = async() => {
-            if(!connection.current){
-                dispatch(setLoadingPrompt("Establishing connection to server...."));
-                try{
-                    await signalR.start();
-                    connection.current = signalR; 
-                } catch (e) {
-                    connection.current = null;
-                    setToken(null);
-                    dispatch(setLoadingPrompt(null));
-                    return;
-                }
-                dispatch(setLoadingPrompt(null));
-            }
-
-            //Check token part
-            let existingToken = localStorage.getItem(accesstoken_keyname);
-            if(existingToken && existingToken !== 'null'){
-                dispatch(setLoadingPrompt("Checking your login credentials, please wait..."));
-                try{      
-                    // vvvvv Check if access token is valid. if not valid will try to refresh the token => if refresh is successful, access token inside storage will automatically update. Otherwise, will throw an error vvvvvvvvv
-                    await AuthAxios.post(process.env.REACT_APP_API_URL + '/main-business/v1/authentication/check-token-valid');            
-                    existingToken = localStorage.getItem(accesstoken_keyname);
-                    await signalR.invoke("Login", parseInt(localStorage.getItem(uid_keyname)));
-                    setToken(existingToken);
-                }catch(err){
-                    setToken(null);
-                }
-            } else {
+    const recheckAccessToken = async() => {
+        let existingToken = localStorage.getItem(accesstoken_keyname);
+        if(existingToken && existingToken !== 'null'){
+            dispatch(setLoadingPrompt("Checking your login credentials, please wait..."));
+            try{      
+                // vvvvv Check if access token is valid. if not valid will try to refresh the token => if refresh is successful, access token inside storage will automatically update. Otherwise, will throw an error vvvvvvvvv
+                await AuthAxios.post(process.env.REACT_APP_API_URL + '/main-business/v1/authentication/check-token-valid');            
+                existingToken = localStorage.getItem(accesstoken_keyname);
+                await signalR.invoke("Login", parseInt(localStorage.getItem(uid_keyname)));
+                setToken(existingToken);
+            }catch(err){
+                console.log(err);
                 setToken(null);
             }
             dispatch(setLoadingPrompt(null));
-        };
+        } else {
+            setToken(null);
+        }  
+    };
+
+    useEffect(() => {
+        if(!isConnecting){
+            recheckAccessToken();
+        }
+    }, [isConnecting]);
+
+    useEffect(() => { 
+        signalR.onclose(error => {
+            dispatch(setLoadingPrompt("Connection lost, refresh page to try reconnect"));
+            if(error){
+                console.log(error);
+            }
+            setToken(null);
+        });
 
         // recheck access token on every page change
         const unlisten = history.listen((location, action) => {
             recheckAccessToken();
         });
-
-        recheckAccessToken();
 
         // on authProvider unmount
         return () => {

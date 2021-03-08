@@ -8,13 +8,15 @@ import { ProjectGridItem } from './ProjectGridItem';
 
 import { setCurrentProjects } from '../../redux/projects/projectsSlice';
 
-import signalR from '../../utils/signalR';
+import { useSignalR }  from '../../services/signalR';
 
 import { GetAllProjects_Action } from '../../services/actions/projects/GetAllProjects_Action';
 
 function ProjectsGrid({width}){
     const dispatch = useDispatch();
     const theme = useTheme();
+
+    const { signalR } = useSignalR();
 
     const maxProjectPerPage = /sm|md/.test(width) ? 8 : /xs/.test(width) ? 10 : 9;
     const [numOfPages, setNumOfPages] = useState(1);

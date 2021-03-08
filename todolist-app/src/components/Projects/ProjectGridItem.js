@@ -74,7 +74,7 @@ export function ProjectGridItem({project}){
                     </Hidden>
                     <Grid container item xs={8} md={12} spacing={1}>
                         <Grid item xs={12}>
-                            <Link to="#" style={{  
+                            <Link to={project && project.id ? `/project/${project.id}` : "#"} style={{  
                                 textDecoration: 'none',
                             }}>
                                 <Typography variant="subtitle1" color='primary' className={classes.projectName}>
