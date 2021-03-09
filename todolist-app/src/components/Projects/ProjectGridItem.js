@@ -3,7 +3,7 @@ import { useTheme, makeStyles } from '@material-ui/core';
 
 import { FolderShared as ProjectIcon } from '@material-ui/icons';
 
-import { Link } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 
 import { useDispatch } from 'react-redux';
 import { setCurrentModifyingProject, setOpenCreateModifyProjectDialog } from '../../redux/dialogs/dialogSlice';
@@ -42,6 +42,7 @@ const useStyles = makeStyles((theme) => ({
 export function ProjectGridItem({project}){
     const theme = useTheme();
     const classes = useStyles();
+    const history = useHistory();
 
     const dispatch = useDispatch();
 
@@ -59,6 +60,8 @@ export function ProjectGridItem({project}){
                         }}>
                             <IconButton style={{
                                 width: "100%"
+                            }} onClick={() => {
+                                history.push(project && project.id ? `/project/${project.id}` : "#");
                             }}>
                                 <ProjectIcon style={{
                                     width: "70%",

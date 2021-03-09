@@ -35,7 +35,7 @@ export function ProjectSection({section}){
                         fontStyle: section && section.name ? 'normal' : 'italic',
                         overflowWrap: 'break-word',
                     }}>
-                        {section && section.name ? section.name : 'Project doesnt have a name' }
+                        {section && section.name ? section.name : 'Project have no name' }
                     </Typography>
                 </ListItemText>
                 <Tooltip title="Add task">
@@ -54,9 +54,11 @@ export function ProjectSection({section}){
                             </Grid>
                         ))   
                     :<Grid container item xs={12} justify="center">
-                        <Alert severity="info">
+                        <Typography variant="body2" style={{
+                            fontStyle: 'italic'
+                        }}>
                             There are no child tasks
-                        </Alert>
+                        </Typography>
                     </Grid>
                     }
                 </List>

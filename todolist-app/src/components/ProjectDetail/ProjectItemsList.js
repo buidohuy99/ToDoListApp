@@ -28,7 +28,7 @@ export function ProjectItemsList() {
                     fontStyle: currentViewingProject && currentViewingProject.description ? 'normal' : 'italic'
                 }}>
                     &nbsp;
-                    {(currentViewingProject && currentViewingProject.description ? currentViewingProject.description : "<this project doesnt have a description>")}
+                    {(currentViewingProject && currentViewingProject.description ? currentViewingProject.description : " < No description found... >")}
                 </Typography>
             </Grid>
             <List component={Grid} container item spacing={1}>

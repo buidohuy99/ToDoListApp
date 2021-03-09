@@ -164,7 +164,7 @@ function ProjectDetail({width}){
                         </Tooltip>
                     </Grid>
                     <Grid item>
-                        <Tooltip title="Assign users">
+                        <Tooltip title="Participants">
                             <IconButton size="medium" onClick={() => {
                                 dispatch(setParentProject(currentViewingProject));
                                 dispatch(setOpenAssignUsersDialog(true));

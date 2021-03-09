@@ -4,7 +4,7 @@ import { useHistory } from 'react-router-dom';
 
 import { APIWorker } from '../../services/axios';
 
-import { Dialog, Grid, TextField, DialogActions, DialogContent, DialogContentText, Button, Hidden } from '@material-ui/core';
+import { Dialog, Grid, TextField, DialogActions, DialogContent, DialogContentText, Button, Hidden, useTheme } from '@material-ui/core';
 import { Alert } from '@material-ui/lab';
 
 import { setLoadingPrompt } from '../../redux/loading/loadingSlice';
@@ -13,6 +13,7 @@ import { setOpenAddModifyTaskDialog, setCurrentModifyingTask } from '../../redux
 export function Add_ModifyTaskDialog({open}){
     const dispatch = useDispatch();
     const history = useHistory();
+    const theme = useTheme();
 
     const [disableForm, setDisableForm] = useState(false);
     

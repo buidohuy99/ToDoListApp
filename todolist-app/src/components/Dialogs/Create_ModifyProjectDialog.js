@@ -61,7 +61,7 @@ export function Create_ModifyProjectDialog({open}){
                 dispatch(setParentProject(null));
             }
         }}>
-            <DialogTitle id="form-dialog-title">{parentProjectOfDialog ? "Children project" : "Project"}</DialogTitle>
+            <DialogTitle id="form-dialog-title">{parentProjectOfDialog ? "Child project" : "Project"}</DialogTitle>
             <form onSubmit={async (e) => {
                 e.preventDefault();
                 setDisableForm(true);

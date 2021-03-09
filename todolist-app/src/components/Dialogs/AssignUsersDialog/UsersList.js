@@ -1,15 +1,28 @@
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { Grid, Typography, Paper, Divider, IconButton, Tooltip, CircularProgress, Button, Table, TableCell, TableRow, TableBody, TableHead, TableContainer } from '@material-ui/core';
-import { List, ListSubheader } from '@material-ui/core';
 import { Alert } from '@material-ui/lab';
-import { PersonAddOutlined, MoreHoriz } from '@material-ui/icons';
+import { PersonAddOutlined, MoreHoriz, RemoveCircle } from '@material-ui/icons';
+
+import { setLoadingPrompt } from '../../../redux/loading/loadingSlice';
+
+import { setOpenUserRolesEditDialog, setUserForUserRolesEditDialog } from '../../../redux/dialogs/dialogSlice';
+import { uid_keyname } from '../../../services/auth';
+import { useEffect, useState } from 'react';
 
 export function UsersList() {
+    const dispatch = useDispatch();
+
     const usersListForDialog = useSelector((state) => state.dialog.usersListOfAssignDialog);
     const participantsOfProject = useSelector((state) => state.dialog.participantsOfAssignDialog);
     const isLoadingUsersList = useSelector((state) => state.dialog.isLoadingUsersList);
     const isDialogInSearchMode = useSelector((state) => state.dialog.isDialogInSearchMode);
+    const canUserDoAssignment = useSelector((state) => state.dialog.canUserDoAssignment);
+
+    const handleAddParticipant = (user) => {
+        dispatch(setUserForUserRolesEditDialog(user));
+        dispatch(setOpenUserRolesEditDialog(true));
+    };
 
     return (
     <Grid container item xs={12} style={{
@@ -17,11 +30,10 @@ export function UsersList() {
         maxHeight: 300,
         overflowY: 'auto'
     }}>
-        {/* print out all tasks in project first */}
         <Grid item xs={12}>
             {
             isLoadingUsersList?
-                <Grid xs={12}>
+                <Grid item xs={12}>
                     <CircularProgress size="small" color="primary"></CircularProgress>
                 </Grid>
             :
@@ -34,6 +46,7 @@ export function UsersList() {
                             <TableRow>
                                 <TableCell>Username</TableCell>
                                 <TableCell>Email</TableCell>
+                                <TableCell>Full name</TableCell>
                                 <TableCell align="right">Actions</TableCell>
                             </TableRow>
                         </TableHead>
@@ -46,12 +59,25 @@ export function UsersList() {
                                 <TableCell>
                                     {val.email}
                                 </TableCell>
+                                <TableCell>
+                                    {val.firstName+" "+val.lastName}
+                                </TableCell>
                                 <TableCell align="right">
+                                    {(() => {
+                                    // if not owner, PM or leader, cannot remove
+                                    if(!canUserDoAssignment){
+                                        return null;
+                                    }
+
+                                    return(
                                     <Tooltip title="Add participant">
-                                        <IconButton>
+                                        <IconButton onClick={() => {
+                                            handleAddParticipant(val);
+                                        }}>
                                             <PersonAddOutlined/>
                                         </IconButton>
-                                    </Tooltip>
+                                    </Tooltip>);
+                                    })()}
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -79,6 +105,7 @@ export function UsersList() {
                             <TableRow>
                                 <TableCell>Username</TableCell>
                                 <TableCell>Email</TableCell>
+                                <TableCell>Full name</TableCell>
                                 <TableCell align="right">Actions</TableCell>
                             </TableRow>
                         </TableHead>
@@ -91,9 +118,38 @@ export function UsersList() {
                                 <TableCell>
                                     {val.userDetail.email}
                                 </TableCell>
+                                <TableCell>
+                                    {val.userDetail.firstName+" "+val.userDetail.lastName}
+                                </TableCell>
                                 <TableCell align="right">
-                                    <Tooltip title="See roles">
+                                    {
+                                    (() => {
+                                    const currentUser = localStorage.getItem(uid_keyname);
+                                    if(!currentUser || !val.rolesInProject){
+                                        return null;
+                                    }
+
+                                    //if participant is himself
+                                    if(parseInt(currentUser) === parseInt(val.userDetail.id)){
+                                        return null;
+                                    }
+
+                                    // if not owner, PM or leader, cannot remove
+                                    if(!canUserDoAssignment){
+                                        return null;
+                                    }
+
+                                    return(<Tooltip title="Remove user">
                                         <IconButton>
+                                            <RemoveCircle/>
+                                        </IconButton>
+                                    </Tooltip>);
+                                    })()
+                                    }
+                                    <Tooltip title="See roles">
+                                        <IconButton onClick={() => {
+                                            handleAddParticipant(val);
+                                        }}>
                                             <MoreHoriz/>
                                         </IconButton>
                                     </Tooltip>
@@ -116,7 +172,7 @@ export function UsersList() {
                     </Alert>
                 </Grid>
             )
-            }      
+            } 
         </Grid>
     </Grid>);
 }
