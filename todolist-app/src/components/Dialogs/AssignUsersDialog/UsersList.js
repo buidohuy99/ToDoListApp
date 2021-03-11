@@ -8,21 +8,75 @@ import { setLoadingPrompt } from '../../../redux/loading/loadingSlice';
 
 import { setOpenUserRolesEditDialog, setUserForUserRolesEditDialog } from '../../../redux/dialogs/dialogSlice';
 import { uid_keyname } from '../../../services/auth';
+import { APIWorker } from '../../../services/axios';
+
 import { useEffect, useState } from 'react';
 
-export function UsersList() {
+export function UsersList({errorSetter}) {
     const dispatch = useDispatch();
 
     const usersListForDialog = useSelector((state) => state.dialog.usersListOfAssignDialog);
     const participantsOfProject = useSelector((state) => state.dialog.participantsOfAssignDialog);
     const isLoadingUsersList = useSelector((state) => state.dialog.isLoadingUsersList);
     const isDialogInSearchMode = useSelector((state) => state.dialog.isDialogInSearchMode);
+
+    const openAssignUsersDialog = useSelector((state) => state.dialog.openAssignUsersDialog);
+
+    const parentProjectOfDialog = useSelector((state) => state.dialog.parentProject);
     const canUserDoAssignment = useSelector((state) => state.dialog.canUserDoAssignment);
+
+    const [ownerParticipant, setOwnerParticipant] = useState(null);
+
+    useEffect(() => {
+        dispatch(setLoadingPrompt("Getting infos of project owner..."));
+        // update owner
+        (async() => {
+            if(openAssignUsersDialog && participantsOfProject){
+                const owner = participantsOfProject.filter((value) => {
+                    const filterOwner = value.rolesInProject.filter((val) => parseInt(val.id) === 1);
+                    if(filterOwner && filterOwner.length > 0){
+                        return true;
+                    }
+                    return false;
+                });
+                if(owner && owner.length === 1){
+                    setOwnerParticipant(owner[0]);
+                }
+            }
+            dispatch(setLoadingPrompt(null));
+        })();
+    }, [openAssignUsersDialog, participantsOfProject]);
 
     const handleAddParticipant = (user) => {
         dispatch(setUserForUserRolesEditDialog(user));
         dispatch(setOpenUserRolesEditDialog(true));
     };
+
+    const handleRemoveUserFromProject = (userid) => {
+        dispatch(setLoadingPrompt("Trying to remove the specified user..."));
+        (async() => {
+            try{
+                if(!parentProjectOfDialog || !parentProjectOfDialog.id){
+                    throw new Error("No project specified to start removal");
+                }
+                if(!userid){
+                    throw new Error("No user specified to start removal");
+                }
+                const query = `RemoveFromProjectId=${parentProjectOfDialog.id}&RemoveUserId=${userid}`
+                const result = await APIWorker.callAPI('delete', '/main-business/v1/participation-management/participation?' + query);
+                const { data } = result.data;
+
+                dispatch(setLoadingPrompt(null));
+                return;
+            }catch(e){
+                console.log(e);
+                if(errorSetter){
+                    errorSetter("A problem occurred while trying to remove the user");
+                }
+            }
+            dispatch(setLoadingPrompt(null));
+        })();
+    }
 
     return (
     <Grid container item xs={12} style={{
@@ -125,7 +179,7 @@ export function UsersList() {
                                     {
                                     (() => {
                                     const currentUser = localStorage.getItem(uid_keyname);
-                                    if(!currentUser || !val.rolesInProject){
+                                    if(!currentUser){
                                         return null;
                                     }
 
@@ -134,13 +188,20 @@ export function UsersList() {
                                         return null;
                                     }
 
+                                    //if participant is owner
+                                    if(ownerParticipant && parseInt(val.userDetail.id) === parseInt(ownerParticipant.userDetail.id)){
+                                        return null;
+                                    }
+
                                     // if not owner, PM or leader, cannot remove
                                     if(!canUserDoAssignment){
                                         return null;
                                     }
 
-                                    return(<Tooltip title="Remove user">
-                                        <IconButton>
+                                    return(<Tooltip title="Remove from project">
+                                        <IconButton onClick={() => {
+                                            handleRemoveUserFromProject(val.userDetail.id);
+                                        }}>
                                             <RemoveCircle/>
                                         </IconButton>
                                     </Tooltip>);

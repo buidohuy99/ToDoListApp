@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Grid, Typography, Button, Paper, useTheme, Select, MenuItem, FormHelperText, InputLabel, FormControl } from '@material-ui/core';
+import React, { useEffect, useState } from 'react';
+import { Tooltip, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Grid, Typography, Button, Paper, useTheme, Select, MenuItem, FormHelperText, InputLabel, FormControl, Table, TableBody, TableHead, TableRow, TableCell, TableContainer, Divider } from '@material-ui/core';
+import { RemoveCircle } from '@material-ui/icons';
 
 import { Alert } from '@material-ui/lab';
 import { useSelector, useDispatch } from 'react-redux';
@@ -8,6 +9,169 @@ import { setUserForUserRolesEditDialog, setOpenUserRolesEditDialog } from '../..
 import { setLoadingPrompt } from '../../../redux/loading/loadingSlice';
 
 import { APIWorker } from '../../../services/axios';
+import { uid_keyname } from '../../../services/auth';
+
+function AddRoleComponent({disableForm}) {
+    const theme = useTheme();
+    const dispatch = useDispatch();
+
+    const [openAddRoleComponent, setOpenAddRoleComponent] = useState(false);
+    const [roleForParticipant, setRoleForParticipant] = useState("");
+    const [error, setError] = useState(null);
+    const [disableInput, setDisableInput] = useState(false);
+
+    const userForUserRolesDialog = useSelector((state) => state.dialog.userForUserRolesEditDialog);
+    const parentProjectOfDialog = useSelector((state) => state.dialog.parentProject);
+
+    const possibleRoles = ["PM", "Leader", "QA", "Developer", "BA", "Member"];
+
+    const [roleList, setRoleList] = useState([]);
+
+    useEffect(() => {
+        setDisableInput(disableForm);
+    }, [disableForm]);
+
+    useEffect(() => {
+        dispatch(setLoadingPrompt("Updating possible roles..."));
+        (async() => {
+            if(openAddRoleComponent && userForUserRolesDialog.rolesInProject){
+                const newRoleList = possibleRoles.map((value) => {
+                    const filteredRoles = userForUserRolesDialog.rolesInProject.filter((val) => val.name === value);
+                    if(!filteredRoles || filteredRoles.length <= 0){
+                        return value;
+                    }     
+                    return null;
+                });
+
+                setRoleList(newRoleList);
+            }
+
+            dispatch(setLoadingPrompt(null));
+        })();
+    }, [openAddRoleComponent, userForUserRolesDialog]);
+
+    const handleCloseComponent = () => {
+        setOpenAddRoleComponent(false); 
+        setError(null);
+        setRoleForParticipant("");
+        setRoleList([]);
+        dispatch(setLoadingPrompt(null));
+    }
+
+    const handleAddRole = () => {
+        dispatch(setLoadingPrompt("Trying to add the new role..."));
+        (async() => {
+            try{
+                if(!parentProjectOfDialog || !parentProjectOfDialog.id){
+                    throw new Error("No project specified to start adding role");
+                }
+                if(!userForUserRolesDialog){
+                    throw new Error("No user specified to start adding role");
+                }
+                if(roleForParticipant === ""){
+                    throw new Error("You need to provide a role to add...");
+                }
+                const result = await APIWorker.postAPI('/main-business/v1/participation-management/participation', {
+                    projectId: parentProjectOfDialog.id,
+                    userId: userForUserRolesDialog.userDetail ? userForUserRolesDialog.userDetail.id : userForUserRolesDialog.id,
+                    roleId: roleForParticipant,
+                });
+                const { data } = result.data;
+
+                handleCloseComponent();
+                return;
+            }catch(e){
+                console.log(e);
+                setError("A problem occurred while trying to add the new role");
+            }
+            dispatch(setLoadingPrompt(null));
+        })();
+    }
+
+    return (
+        <Grid container item xs={12} justify="center">
+        {
+        openAddRoleComponent ?
+        <Grid container item xs={12} spacing={3}>
+            <Grid item xs={12}>
+                <Divider/>
+            </Grid>
+            <Grid item xs={12}>
+            {
+                userForUserRolesDialog && userForUserRolesDialog.rolesInProject ?
+                <Grid container item xs={12} justify="center" spacing={1}>
+                    <Grid container item xs={12} justify="center">
+                        <FormControl fullWidth disabled={disableInput}>
+                            <InputLabel shrink style={{
+                                userSelect: 'none',
+                            }}>
+                                New role
+                            </InputLabel>
+                            <Select
+                            displayEmpty
+                            value={roleForParticipant}
+                            onChange={(e) => {
+                                setRoleForParticipant(e.target.value);
+                            }}
+                            style={{
+                                marginTop: theme.spacing(2)
+                            }}>
+                                <MenuItem value={""}>
+                                    <em>None</em>
+                                </MenuItem>
+                                {
+                                    roleList.map((value, idx) => {
+                                        if(value){
+                                            return (
+                                                <MenuItem key={"possible_role_"+value} value={idx+2}>
+                                                    {value}
+                                                </MenuItem>
+                                            );
+                                        }
+                                        return null;
+                                    })      
+                                }
+                            </Select>
+                            <FormHelperText style={{
+                                userSelect: 'none'
+                            }}>Choose another role for the participant</FormHelperText>
+                        </FormControl>
+                    </Grid>
+                    <Grid container item xs={12} justify="flex-end" spacing={1}>
+                        <Grid item>
+                            <Button variant="outlined" size="small" color="secondary" onClick={() => {
+                                setOpenAddRoleComponent(false);
+                            }}>
+                                Cancel
+                            </Button>
+                        </Grid>
+                        <Grid item>
+                            <Button variant="outlined" size="small" color="primary" onClick={() => {
+                                handleAddRole();
+                            }}>
+                                Add
+                            </Button>
+                        </Grid>
+                    </Grid>
+                    {error ? (<Grid container item xs={12} justify="center">
+                        <Alert severity="error">{error}</Alert>
+                    </Grid>) : null}
+                </Grid>
+                :
+                null
+            } 
+            </Grid>
+        </Grid>
+        :
+        <Button size="small" color="primary" onClick={() => {
+            setOpenAddRoleComponent(true);
+        }}>
+            Add more roles...
+        </Button>
+        }
+        </Grid>
+    );
+}
 
 export function RolesEditDialog(){
     const dispatch = useDispatch();
@@ -29,34 +193,57 @@ export function RolesEditDialog(){
         dispatch(setLoadingPrompt(null));
     };
 
-    const handleAddParticipant = async() => {
-        setDisableForm(true);
-        dispatch(setLoadingPrompt("Trying to add participant..."));
+    const handleAddParticipant = () => {
+        dispatch(setLoadingPrompt("Trying to add the new participant..."));
+        (async() => {
+            try{
+                if(!parentProjectOfDialog || !parentProjectOfDialog.id){
+                    throw new Error("No project specified to start adding participants");
+                }
+                if(!userForDialog){
+                    throw new Error("No user specified to start adding participants");
+                }
+                if(addParticipantRoleField === ""){
+                    throw new Error("You need to provide a role to add...");
+                }
+                const result = await APIWorker.postAPI('/main-business/v1/participation-management/participation', {
+                    projectId: parentProjectOfDialog.id,
+                    userId: userForDialog.userDetail ? userForDialog.userDetail.id : userForDialog.id,
+                    roleId: addParticipantRoleField,
+                });
+                const { data } = result.data;
+
+                handleCloseDialog();
+                return;
+            }catch(e){
+                console.log(e);
+                setError("A problem occurred while trying to add participant");
+            }
+            dispatch(setLoadingPrompt(null));
+        })();
+    }
+
+    const handleRemoveRole = async (roleid) => {
+        dispatch(setLoadingPrompt("Trying to remove the specified role of user..."));
         try{
             if(!parentProjectOfDialog || !parentProjectOfDialog.id){
-                throw new Error("No project specified to start adding participants");
+                throw new Error("No project specified to start removal");
             }
-            if(!userForDialog){
-                throw new Error("No user specified to start adding participants");
+            if(!userForDialog || !userForDialog.userDetail || !userForDialog.userDetail.id){
+                throw new Error("No user specified to start removal");
             }
-            if(addParticipantRoleField === ""){
-                throw new Error("You need to provide a role to add...");
-            }
-            const result = await APIWorker.postAPI('/main-business/v1/participation-management/participation', {
-                projectId: parentProjectOfDialog.id,
-                userId: userForDialog.userDetail ? userForDialog.userDetail.id : userForDialog.id,
-                roleId: addParticipantRoleField,
-            });
+            const query = `RemoveFromProjectId=${parentProjectOfDialog.id}&RemoveUserId=${userForDialog.userDetail.id}&RemoveProjectRoleId=${roleid}`
+            const result = await APIWorker.callAPI('delete', '/main-business/v1/participation-management/participation?' + query);
             const { data } = result.data;
 
+            dispatch(setLoadingPrompt(null));
             handleCloseDialog();
             return;
         }catch(e){
             console.log(e);
-            setError("A problem occurred while trying to add participant");
+            setError("A problem occurred while trying to remove the role");
         }
         dispatch(setLoadingPrompt(null));
-        setDisableForm(false);
     }
 
     return (
@@ -77,7 +264,7 @@ export function RolesEditDialog(){
         onExited={() => {  
             setError(null);
             setDisableForm(false);
-            setAddParticipantRoleField(null);
+            setAddParticipantRoleField("");
             if(userForDialog){
                 dispatch(setUserForUserRolesEditDialog(null));
             }
@@ -100,7 +287,9 @@ export function RolesEditDialog(){
                         </Grid>
                         <Grid xs={12} item component={Paper} elevation={3} style={{
                             padding: theme.spacing(1),
-                            width: '100%'
+                            width: '100%',
+                            background: theme.palette.primary.main,
+                            color: 'white'
                         }}>
                             <Grid item xs={12}>
                                 <Typography variant="body2" style={{
@@ -130,7 +319,7 @@ export function RolesEditDialog(){
                             </Typography>
                         </Grid>
                         <Grid xs={12} item>
-                            <FormControl fullWidth disabled={disableForm}>
+                            <FormControl fullWidth disabled={disableForm} displayEmpty>
                                 <InputLabel shrink style={{
                                     userSelect: 'none',
                                 }}>Role</InputLabel>
@@ -182,7 +371,9 @@ export function RolesEditDialog(){
                         </Grid>
                         <Grid xs={12} item component={Paper} elevation={3} style={{
                             padding: theme.spacing(1),
-                            width: '100%'
+                            width: '100%',
+                            background: theme.palette.primary.main,
+                            color: 'white'
                         }}>
                             <Grid item xs={12}>
                                 <Typography variant="body2" style={{
@@ -208,6 +399,53 @@ export function RolesEditDialog(){
                             }}>
                                 Role
                             </Typography>
+                        </Grid>
+                        <Grid xs={12} item>
+                            <TableContainer component={Paper}>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>Id</TableCell>
+                                            <TableCell>Role name</TableCell>
+                                            <TableCell align="right">Actions</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                    {userForDialog.rolesInProject.map((val, idx) => (
+                                        <TableRow key={"role_of_participant"+idx}>
+                                            <TableCell component="th" scope="row">
+                                                {idx+1}
+                                            </TableCell>
+                                            <TableCell>
+                                                {val.name}
+                                            </TableCell>
+                                            <TableCell align="right">
+                                                {
+                                                (() => {
+                                                return(canUserDoAssignment && val.id !== 1 && userForDialog.rolesInProject.length > 1?
+                                                <Tooltip title="Remove this role">
+                                                    <IconButton onClick={() => {
+                                                        handleRemoveRole(val.id);
+                                                    }}>
+                                                        <RemoveCircle/>
+                                                    </IconButton>
+                                                </Tooltip> : null);
+                                                })()
+                                                }
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </Grid>
+                        <Grid container item xs={12} justify="center">
+                            {
+                                canUserDoAssignment? 
+                                <AddRoleComponent disableForm={disableForm} />
+                                : 
+                                null
+                            }
                         </Grid>
                     </Grid>
                     :

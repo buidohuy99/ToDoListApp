@@ -140,8 +140,11 @@ function App() {
             </footer>
 
             <Backdrop open={loadingPrompt !== null}
-              className={classes.loadingBackdrop}>
-              <CircularProgress color="inherit" style={{
+              className={classes.loadingBackdrop}
+              style={{
+                visibility: loadingPrompt ? 'visible' : 'hidden'
+              }}>
+              <CircularProgress disableShrink={true} color="inherit" style={{
                 marginBottom: 15,
               }}/>
               <Typography variant="body1" style={{ color: "white", userSelect: 'none' }}>

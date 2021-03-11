@@ -11,6 +11,7 @@ import { setCurrentProjects } from '../../redux/projects/projectsSlice';
 import { useSignalR }  from '../../services/signalR';
 
 import { GetAllProjects_Action } from '../../services/actions/projects/GetAllProjects_Action';
+import { setLoadingPrompt } from '../../redux/loading/loadingSlice';
 
 function ProjectsGrid({width}){
     const dispatch = useDispatch();
@@ -96,19 +97,24 @@ function ProjectsGrid({width}){
 
     useEffect(() => {
         const updateGridStatus = (projects) => {
+            dispatch(setLoadingPrompt("Information about your projects came from the server..."));
             setPagesLoading(true);
-            if(searchString){
-                projects = projects.filter((value) => value.name.includes(searchString))
-            }
-            const pagesCount = parseInt(Math.ceil(projects.length/maxProjectPerPage));
-            setNumOfPages(pagesCount);
             setProjectsLoading(true);
-            const newCurrentPage = currentPage > pagesCount ? pagesCount : currentPage;
-            const start = (newCurrentPage - 1)*maxProjectPerPage;
-            dispatch(setCurrentProjects(projects.slice(start, Math.min(start + maxProjectPerPage, projects.length))));
-            setCurrentPage(newCurrentPage);
-            setProjectsLoading(false);
-            setPagesLoading(false);
+            (async() => {
+                if(searchString){
+                    projects = projects.filter((value) => value.name.includes(searchString))
+                }
+                const pagesCount = Math.max(1, parseInt(Math.ceil(projects.length/maxProjectPerPage)));
+                setNumOfPages(pagesCount);
+                
+                const newCurrentPage = currentPage > pagesCount ? pagesCount : currentPage;
+                const start = (newCurrentPage - 1)*maxProjectPerPage;
+                dispatch(setCurrentProjects(projects.slice(start, Math.min(start + maxProjectPerPage, projects.length))));
+                setCurrentPage(newCurrentPage);
+                setProjectsLoading(false);
+                setPagesLoading(false);
+                dispatch(setLoadingPrompt(null));
+            })();
         }
 
         signalR.on("projects-list-changed", (data) => {

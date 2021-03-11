@@ -8,23 +8,23 @@ const AuthAxios = axios.create({
 
 // class to call API requests
 class APIWorker {
-    static callAPI = (method, url) => {
-        return AuthAxios({
+    static callAPI = async (method, url) => {
+        return await AuthAxios({
             method: method,
             url: process.env.REACT_APP_API_URL + url
         });
     };
 
-    static postAPI = (url, data) => {
-        return AuthAxios.post(process.env.REACT_APP_API_URL + url, data);
+    static postAPI = async (url, data) => {
+        return await AuthAxios.post(process.env.REACT_APP_API_URL + url, data);
     };
 
-    static putAPI = (url, data) => {
-        return AuthAxios.put(process.env.REACT_APP_API_URL + url, data);
+    static putAPI = async(url, data) => {
+        return await AuthAxios.put(process.env.REACT_APP_API_URL + url, data);
     };
 
-    static patchAPI = (url, data) => {
-        return AuthAxios.patch(process.env.REACT_APP_API_URL + url, data);
+    static patchAPI = async(url, data) => {
+        return await AuthAxios.patch(process.env.REACT_APP_API_URL + url, data);
     };
 }
 

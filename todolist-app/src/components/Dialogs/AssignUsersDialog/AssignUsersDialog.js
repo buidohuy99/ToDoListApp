@@ -5,7 +5,7 @@ import { useHistory } from 'react-router-dom';
 import { Dialog, DialogActions, DialogContent, DialogTitle, InputAdornment, IconButton, TextField, FormControl, Input, Grid, Hidden, Button, useTheme, makeStyles, Typography } from '@material-ui/core';
 import { Alert } from '@material-ui/lab';
 
-import { setOpenAssignUsersDialog, setParentProject, setIsDialogInSearchMode, setIsLoadingUsersList, setUserListsForAssignDialog, setParticipantsOfAssignDialog, setCanUserDoAssignment } from '../../../redux/dialogs/dialogSlice';
+import { setOpenAssignUsersDialog, setParentProject, setIsDialogInSearchMode, setIsLoadingUsersList, setUserListsForAssignDialog, setParticipantsOfAssignDialog, setCanUserDoAssignment, setUserForUserRolesEditDialog } from '../../../redux/dialogs/dialogSlice';
 import { setLoadingPrompt } from '../../../redux/loading/loadingSlice';
 
 import { APIWorker } from '../../../services/axios';
@@ -35,6 +35,9 @@ export function AssignUsersDialog({open}){
     const isDialogInSearchMode = useSelector((state) => state.dialog.isDialogInSearchMode);
     const usersListForDialog = useSelector((state) => state.dialog.usersListOfAssignDialog);
     const participantsOfProject = useSelector((state) => state.dialog.participantsOfAssignDialog);
+
+    const userRolesDialogIsOpen = useSelector((state) => state.dialog.openUserRolesEditDialog);
+    const userForUserRolesDialog = useSelector((state) => state.dialog.userForUserRolesEditDialog);
 
     const canUserDoAssignment = useSelector((state) => state.dialog.canUserDoAssignment);
 
@@ -88,23 +91,27 @@ export function AssignUsersDialog({open}){
 
     useEffect(() => {
         if(openDialog && participantsOfProject){
-            const currentUser = localStorage.getItem(uid_keyname);
-            if(currentUser){
-                const filter = participantsOfProject.filter((e) => {
-                    if(parseInt(e.userDetail.id) === parseInt(currentUser)){
-                        // only allow
-                        const filteredRoles = e.rolesInProject.filter(role => parseInt(role.id) < 4);
-                        if(filteredRoles && filteredRoles.length > 0){
-                            return true;
+            dispatch(setLoadingPrompt("Checking your permissions..."));
+            (async() => {
+                const currentUser = localStorage.getItem(uid_keyname);
+                if(currentUser){
+                    const filter = participantsOfProject.filter((e) => {
+                        if(parseInt(e.userDetail.id) === parseInt(currentUser)){
+                            // only allow
+                            const filteredRoles = e.rolesInProject.filter(role => parseInt(role.id) < 4);
+                            if(filteredRoles && filteredRoles.length > 0){
+                                return true;
+                            }
                         }
-                    }
-                    return false;
-                });
+                        return false;
+                    });
 
-                if(filter && filter.length > 0){
-                    dispatch(setCanUserDoAssignment(true));
+                    if(filter && filter.length > 0){
+                        dispatch(setCanUserDoAssignment(true));
+                    }
                 }
-            }
+                dispatch(setLoadingPrompt(null));
+            })();
         }
     }, [openDialog, participantsOfProject]);
 
@@ -114,35 +121,46 @@ export function AssignUsersDialog({open}){
             setDisableForm(true);
             dispatch(setLoadingPrompt("An update for participants came from the server..."));
             dispatch(setParticipantsOfAssignDialog(data.users));
-            
-            // check if got kicked
-            const currentUser = localStorage.getItem(uid_keyname);
-            const found = data.users.filter((e) => parseInt(e.userDetail.id) === parseInt(currentUser));
-           
-            if(!found || found.length <= 0){
-                dispatch(setLoadingPrompt("You got kicked out from the project, redirecting to index..."));
-                handleCloseDialog();
-                history.push('/');
-                dispatch(setLoadingPrompt(null));
-                return;
-            } 
-              
-            // change 
-            if(usersListForDialog){
-                const copyOfUsersList = usersListForDialog.slice();
-                const newListWithoutParticipants = copyOfUsersList.filter((e) => {
-                    const filtered = data.users.filter(x => x.userDetail.id === e.id);
-                    return (!filtered || filtered.length <= 0);
-                });
-                
-                dispatch(setUserListsForAssignDialog(newListWithoutParticipants));
-            }
 
-            dispatch(setLoadingPrompt(null));
+            (async() => {
+                // check if got kicked
+                const currentUser = localStorage.getItem(uid_keyname);
+                const found = data.users.filter((e) => parseInt(e.userDetail.id) === parseInt(currentUser));
             
-            setDisableForm(false);
+                if(!found || found.length <= 0){
+                    dispatch(setLoadingPrompt("You got kicked out from the project, redirecting to index..."));
+                    handleCloseDialog();
+                    history.push('/');
+                    dispatch(setLoadingPrompt(null));
+                    return;
+                } 
+                
+                // change search list to remove participants of project
+                if(usersListForDialog){
+                    const copyOfUsersList = usersListForDialog.slice();
+                    const newListWithoutParticipants = copyOfUsersList.filter((e) => {
+                        const filtered = data.users.filter(x => x.userDetail.id === e.id);
+                        return (!filtered || filtered.length <= 0);
+                    });
+                    
+                    dispatch(setUserListsForAssignDialog(newListWithoutParticipants));
+                }
+
+                //update info in roles edit dialog if its open
+                if(userForUserRolesDialog && userRolesDialogIsOpen){
+                    data.users.forEach((val) => {
+                        if(userForUserRolesDialog.userDetail && val.userDetail && parseInt(val.userDetail.id) === parseInt(userForUserRolesDialog.userDetail.id)){
+                            dispatch(setUserForUserRolesEditDialog(val));
+                        }
+                    });
+                }
+
+                dispatch(setLoadingPrompt(null));
+                
+                setDisableForm(false);
+            })();
         });
-    }, [usersListForDialog]);
+    }, [usersListForDialog, userForUserRolesDialog]);
 
     return (<Dialog 
         fullScreen
@@ -178,9 +196,8 @@ export function AssignUsersDialog({open}){
                         placeholder="Type in username or email to find user"
                         value={searchFieldValue ? searchFieldValue : ""}
                         onChange={(e) => {
-                            if(error) {
-                                setDisableForm(true);
-                                return;
+                            if(error){
+                                setError(null);
                             }
                             setSearchFieldValue(e.target.value === "" ? null : e.target.value);
                             if(!e.target.value || e.target.value === ""){
@@ -199,7 +216,7 @@ export function AssignUsersDialog({open}){
                     </Typography>
                 </Grid>
                 <Grid item xs={12}>
-                    <UsersList/>
+                    <UsersList errorSetter={setError}/>
                 </Grid>
                 {error ? (<Grid container item xs={12} justify="center">
                     <Alert severity="error">{error}</Alert>
