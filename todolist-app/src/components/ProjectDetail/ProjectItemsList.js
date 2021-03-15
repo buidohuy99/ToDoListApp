@@ -38,7 +38,7 @@ export function ProjectItemsList() {
                         <ListSubheader component={Grid} xs={12} item>
                             Tasks ~ 
                         </ListSubheader>
-                    } component={Grid} item>
+                    } component={Grid} container item spacing={1}>
 
                         {currentViewingProject && currentViewingProject.childrenTasks && currentViewingProject.childrenTasks.length > 0 ? 
                             currentViewingProject.childrenTasks.map((val, idx) => (
@@ -67,7 +67,7 @@ export function ProjectItemsList() {
                         <ListSubheader component={Grid} xs={12} item>
                             Groups   
                         </ListSubheader>
-                    } component={Grid} item>
+                    } component={Grid} container item spacing={3}>
 
                         {currentViewingProject && currentViewingProject.children && currentViewingProject.children.length > 0 ? 
                             currentViewingProject.children.map((val, idx) => {

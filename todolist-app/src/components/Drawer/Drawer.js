@@ -56,8 +56,8 @@ export default function GlobalDrawer() {
               </IconButton>
             </div>
             <Divider />
-            <DueTasksMenuList />
-            <Divider />
+            {/* <DueTasksMenuList />
+            <Divider /> */}
             <NavigationsMenuList />
           </Drawer>
         </nav> : null
