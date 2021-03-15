@@ -1,5 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 
+import { APIWorker } from '../../services/axios';
+
 export const dialogSlice = createSlice({
   name: 'dialog',
   initialState: {
@@ -82,5 +84,46 @@ export const { setCurrentModifyingProject, setOpenCreateModifyProjectDialog, set
   setCanUserDoAssignment,
 
   setOpenUserRolesEditDialog, setUserForUserRolesEditDialog } = dialogSlice.actions;
+
+// Roles Edit dialog async actions
+export function addNewRole(payload, onSuccess, onFailed) {
+  return async (dispatch, getState) => {
+    try{
+      const result = await APIWorker.postAPI('/main-business/v1/participation-management/participation', {
+          projectId: payload.projectId,
+          userId: payload.userId,
+          roleId: payload.roleId,
+      });
+      const {data} = result.data;
+      if(onSuccess) {
+        onSuccess(data);
+      }
+    } catch (e) {
+      console.log(e);
+      if(onFailed){
+        onFailed(e);
+      }
+    }
+  }
+}
+
+export function removeRole(payload, onSuccess, onFailed) {
+  return async (dispatch, getState) => {
+    try{
+      const query = `RemoveFromProjectId=${payload.projectId}&RemoveUserId=${payload.userId}&RemoveProjectRoleId=${payload.roleId}`
+      const result = await APIWorker.callAPI('delete', '/main-business/v1/participation-management/participation?' + query);
+            
+      const {data} = result.data;
+      if(onSuccess) {
+        onSuccess(data);
+      }
+    } catch (e) {
+      console.log(e);
+      if(onFailed){
+        onFailed(e);
+      }
+    }
+  }
+}
 
 export default dialogSlice.reducer;

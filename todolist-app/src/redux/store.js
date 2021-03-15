@@ -1,4 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
+import reduxThunk from 'redux-thunk';
 
 import navigationReducer from './navigation/navigationSlice';
 import loadingReducer from './loading/loadingSlice';
@@ -15,4 +16,5 @@ export default configureStore({
     projectDetail: projectDetailReducer,
     dialog: dialogReducer
   },
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(reduxThunk)
 });

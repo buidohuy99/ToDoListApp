@@ -5,7 +5,7 @@ import { useHistory } from 'react-router-dom';
 import { Dialog, DialogActions, DialogContent, DialogTitle, InputAdornment, IconButton, TextField, FormControl, Input, Grid, Hidden, Button, useTheme, makeStyles, Typography } from '@material-ui/core';
 import { Alert } from '@material-ui/lab';
 
-import { setOpenAssignUsersDialog, setParentProject, setIsDialogInSearchMode, setIsLoadingUsersList, setUserListsForAssignDialog, setParticipantsOfAssignDialog, setCanUserDoAssignment, setUserForUserRolesEditDialog } from '../../../redux/dialogs/dialogSlice';
+import { setOpenAssignUsersDialog, setParentProject, setIsDialogInSearchMode, setIsLoadingUsersList, setUserListsForAssignDialog, setParticipantsOfAssignDialog, setCanUserDoAssignment, setUserForUserRolesEditDialog, setOpenUserRolesEditDialog } from '../../../redux/dialogs/dialogSlice';
 import { setLoadingPrompt } from '../../../redux/loading/loadingSlice';
 
 import { APIWorker } from '../../../services/axios';
@@ -15,10 +15,6 @@ import { UsersList } from '../../../components/Dialogs/AssignUsersDialog/UsersLi
 import { RolesEditDialog } from '../../../components/Dialogs/AssignUsersDialog/RolesEditDialog';
 
 import { useSignalR } from '../../../services/signalR';
-
-const useStyles = makeStyles((theme) => ({
-
-}));
 
 export function AssignUsersDialog({open}){
     const dispatch = useDispatch();
@@ -43,6 +39,7 @@ export function AssignUsersDialog({open}){
 
     const handleCloseDialog = () => {   
         dispatch(setOpenAssignUsersDialog(false)); 
+        dispatch(setOpenUserRolesEditDialog(false));
         setSearchFieldValue(null);
         dispatch(setLoadingPrompt(null));
     };
@@ -95,72 +92,77 @@ export function AssignUsersDialog({open}){
             (async() => {
                 const currentUser = localStorage.getItem(uid_keyname);
                 if(currentUser){
-                    const filter = participantsOfProject.filter((e) => {
-                        if(parseInt(e.userDetail.id) === parseInt(currentUser)){
-                            // only allow
-                            const filteredRoles = e.rolesInProject.filter(role => parseInt(role.id) < 4);
-                            if(filteredRoles && filteredRoles.length > 0){
-                                return true;
-                            }
+                    const entry = participantsOfProject.find((value) => parseInt(value.userDetail.id) === parseInt(currentUser));
+                    if(entry){
+                        // only allow user with PM, Leader or Owner to assign users
+                        const foundAllow = entry.rolesInProject.find(role => parseInt(role.id) < 4);
+                        if(foundAllow){
+                            dispatch(setCanUserDoAssignment(true));
+                            dispatch(setLoadingPrompt(null));
+                            return;
                         }
-                        return false;
-                    });
-
-                    if(filter && filter.length > 0){
-                        dispatch(setCanUserDoAssignment(true));
                     }
+                    dispatch(setCanUserDoAssignment(false));
                 }
                 dispatch(setLoadingPrompt(null));
             })();
         }
     }, [openDialog, participantsOfProject]);
 
-    // process signalr sent data use effect to display
+    const [isUnmounted, setIsUnmounted] = useState(false);
+
+    useEffect(() => {
+        return () => {
+            setIsUnmounted(true);
+        }
+    }, []);
+
+    // signalr sent data to display
     useEffect(() => {
         signalR.on("project-participants-list-changed", (data) => {
-            setDisableForm(true);
-            dispatch(setLoadingPrompt("An update for participants came from the server..."));
-            dispatch(setParticipantsOfAssignDialog(data.users));
+            if(!isUnmounted){
+                setDisableForm(true);
+                dispatch(setLoadingPrompt("An update for participants came from the server..."));
+                dispatch(setParticipantsOfAssignDialog(data.users));
 
-            (async() => {
-                // check if got kicked
-                const currentUser = localStorage.getItem(uid_keyname);
-                const found = data.users.filter((e) => parseInt(e.userDetail.id) === parseInt(currentUser));
-            
-                if(!found || found.length <= 0){
-                    dispatch(setLoadingPrompt("You got kicked out from the project, redirecting to index..."));
-                    handleCloseDialog();
-                    history.push('/');
-                    dispatch(setLoadingPrompt(null));
-                    return;
-                } 
+                (async() => {
+                    // check if got kicked
+                    const currentUser = localStorage.getItem(uid_keyname);
+                    const found = data.users.find((e) => parseInt(e.userDetail.id) === parseInt(currentUser));
                 
-                // change search list to remove participants of project
-                if(usersListForDialog){
-                    const copyOfUsersList = usersListForDialog.slice();
-                    const newListWithoutParticipants = copyOfUsersList.filter((e) => {
-                        const filtered = data.users.filter(x => x.userDetail.id === e.id);
-                        return (!filtered || filtered.length <= 0);
-                    });
+                    if(!found){
+                        dispatch(setLoadingPrompt("You got kicked out from the project, redirecting to index..."));
+                        handleCloseDialog();
+                        history.push('/');
+                        dispatch(setLoadingPrompt(null));
+                        return;
+                    } 
                     
-                    dispatch(setUserListsForAssignDialog(newListWithoutParticipants));
-                }
+                    // change search list to remove participants of project
+                    if(usersListForDialog){
+                        const newListWithoutParticipants = usersListForDialog.filter((e) => {
+                            const filtered = data.users.find(x => x.userDetail.id === e.id);
+                            return !filtered;
+                        });
+                        
+                        dispatch(setUserListsForAssignDialog(newListWithoutParticipants));
+                    }
 
-                //update info in roles edit dialog if its open
-                if(userForUserRolesDialog && userRolesDialogIsOpen){
-                    data.users.forEach((val) => {
-                        if(userForUserRolesDialog.userDetail && val.userDetail && parseInt(val.userDetail.id) === parseInt(userForUserRolesDialog.userDetail.id)){
-                            dispatch(setUserForUserRolesEditDialog(val));
+                    //update info in roles edit dialog if its open
+                    if(userForUserRolesDialog && userRolesDialogIsOpen){
+                        const currentUserInEditRolesDialog = data.users.find((val) => userForUserRolesDialog.userDetail && val.userDetail && parseInt(val.userDetail.id) === parseInt(userForUserRolesDialog.userDetail.id));
+                        if(currentUserInEditRolesDialog){
+                            dispatch(setUserForUserRolesEditDialog(currentUserInEditRolesDialog));
                         }
-                    });
-                }
+                    }
 
-                dispatch(setLoadingPrompt(null));
-                
-                setDisableForm(false);
-            })();
+                    dispatch(setLoadingPrompt(null));
+                    
+                    setDisableForm(false);
+                })();
+            }
         });
-    }, [usersListForDialog, userForUserRolesDialog]);
+    }, [usersListForDialog, userForUserRolesDialog, userRolesDialogIsOpen]);
 
     return (<Dialog 
         fullScreen

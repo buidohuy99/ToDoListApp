@@ -5,11 +5,8 @@ import { RemoveCircle } from '@material-ui/icons';
 import { Alert } from '@material-ui/lab';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { setUserForUserRolesEditDialog, setOpenUserRolesEditDialog } from '../../../redux/dialogs/dialogSlice';
+import { setUserForUserRolesEditDialog, setOpenUserRolesEditDialog, addNewRole, removeRole } from '../../../redux/dialogs/dialogSlice';
 import { setLoadingPrompt } from '../../../redux/loading/loadingSlice';
-
-import { APIWorker } from '../../../services/axios';
-import { uid_keyname } from '../../../services/auth';
 
 function AddRoleComponent({disableForm}) {
     const theme = useTheme();
@@ -32,20 +29,20 @@ function AddRoleComponent({disableForm}) {
     }, [disableForm]);
 
     useEffect(() => {
-        dispatch(setLoadingPrompt("Updating possible roles..."));
-        (async() => {
-            if(openAddRoleComponent && userForUserRolesDialog.rolesInProject){
+        (async () => {
+            dispatch(setLoadingPrompt("Updating possible roles..."));
+            if(openAddRoleComponent && userForUserRolesDialog && userForUserRolesDialog.rolesInProject){
                 const newRoleList = possibleRoles.map((value) => {
-                    const filteredRoles = userForUserRolesDialog.rolesInProject.filter((val) => val.name === value);
-                    if(!filteredRoles || filteredRoles.length <= 0){
+                    const filteredRoles = userForUserRolesDialog.rolesInProject.find((val) => val.name === value);
+                    if(!filteredRoles){
                         return value;
                     }     
                     return null;
                 });
 
+                setRoleForParticipant("");
                 setRoleList(newRoleList);
             }
-
             dispatch(setLoadingPrompt(null));
         })();
     }, [openAddRoleComponent, userForUserRolesDialog]);
@@ -60,32 +57,37 @@ function AddRoleComponent({disableForm}) {
 
     const handleAddRole = () => {
         dispatch(setLoadingPrompt("Trying to add the new role..."));
-        (async() => {
-            try{
-                if(!parentProjectOfDialog || !parentProjectOfDialog.id){
-                    throw new Error("No project specified to start adding role");
-                }
-                if(!userForUserRolesDialog){
-                    throw new Error("No user specified to start adding role");
-                }
-                if(roleForParticipant === ""){
-                    throw new Error("You need to provide a role to add...");
-                }
-                const result = await APIWorker.postAPI('/main-business/v1/participation-management/participation', {
+       try{
+            if(!parentProjectOfDialog || !parentProjectOfDialog.id){
+                throw new Error("No project specified to start adding role");
+            }
+            if(!userForUserRolesDialog){
+                throw new Error("No user specified to start adding role");
+            }
+            if(roleForParticipant === ""){
+                throw new Error("You need to provide a role to add...");
+            }
+
+            dispatch(addNewRole(
+                {
                     projectId: parentProjectOfDialog.id,
                     userId: userForUserRolesDialog.userDetail ? userForUserRolesDialog.userDetail.id : userForUserRolesDialog.id,
                     roleId: roleForParticipant,
-                });
-                const { data } = result.data;
-
-                handleCloseComponent();
-                return;
-            }catch(e){
-                console.log(e);
-                setError("A problem occurred while trying to add the new role");
-            }
+                }, 
+                (data) => {
+                    handleCloseComponent();
+                },
+                (error) => {
+                    setError("A problem occurred while trying to add the new role");
+                    dispatch(setLoadingPrompt(null));
+                }
+            ));
+            return;
+        }catch(e){
+            console.log(e);
+            setError("A problem occurred while trying to add the new role");
             dispatch(setLoadingPrompt(null));
-        })();
+        }
     }
 
     return (
@@ -195,32 +197,36 @@ export function RolesEditDialog(){
 
     const handleAddParticipant = () => {
         dispatch(setLoadingPrompt("Trying to add the new participant..."));
-        (async() => {
-            try{
-                if(!parentProjectOfDialog || !parentProjectOfDialog.id){
-                    throw new Error("No project specified to start adding participants");
-                }
-                if(!userForDialog){
-                    throw new Error("No user specified to start adding participants");
-                }
-                if(addParticipantRoleField === ""){
-                    throw new Error("You need to provide a role to add...");
-                }
-                const result = await APIWorker.postAPI('/main-business/v1/participation-management/participation', {
+        try{
+            if(!parentProjectOfDialog || !parentProjectOfDialog.id){
+                throw new Error("No project specified to start adding participants");
+            }
+            if(!userForDialog){
+                throw new Error("No user specified to start adding participants");
+            }
+            if(addParticipantRoleField === ""){
+                throw new Error("You need to provide a role to add...");
+            }
+
+            dispatch(addNewRole(
+                {
                     projectId: parentProjectOfDialog.id,
                     userId: userForDialog.userDetail ? userForDialog.userDetail.id : userForDialog.id,
                     roleId: addParticipantRoleField,
-                });
-                const { data } = result.data;
-
-                handleCloseDialog();
-                return;
-            }catch(e){
-                console.log(e);
-                setError("A problem occurred while trying to add participant");
-            }
+                }, 
+                (data) => {
+                    handleCloseDialog();
+                }, 
+                (error) => {
+                    setError("A problem occurred while trying to add participant");
+                    dispatch(setLoadingPrompt(null));
+            }));
+            return;
+        }catch(e){
+            console.log(e);
+            setError("A problem occurred while trying to add participant");
             dispatch(setLoadingPrompt(null));
-        })();
+        }
     }
 
     const handleRemoveRole = async (roleid) => {
@@ -232,18 +238,27 @@ export function RolesEditDialog(){
             if(!userForDialog || !userForDialog.userDetail || !userForDialog.userDetail.id){
                 throw new Error("No user specified to start removal");
             }
-            const query = `RemoveFromProjectId=${parentProjectOfDialog.id}&RemoveUserId=${userForDialog.userDetail.id}&RemoveProjectRoleId=${roleid}`
-            const result = await APIWorker.callAPI('delete', '/main-business/v1/participation-management/participation?' + query);
-            const { data } = result.data;
 
-            dispatch(setLoadingPrompt(null));
-            handleCloseDialog();
+            dispatch(removeRole(
+                {
+                    projectId: parentProjectOfDialog.id,
+                    userId: userForDialog.userDetail.id,
+                    roleId: roleid
+                }, 
+                (data) => {
+                    dispatch(setLoadingPrompt(null));
+                }, 
+                (error) => {
+                    setError("A problem occurred while trying to remove the role");
+                    dispatch(setLoadingPrompt(null));
+                }
+            ));    
             return;
         }catch(e){
             console.log(e);
             setError("A problem occurred while trying to remove the role");
+            dispatch(setLoadingPrompt(null));
         }
-        dispatch(setLoadingPrompt(null));
     }
 
     return (

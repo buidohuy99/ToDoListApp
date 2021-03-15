@@ -32,15 +32,15 @@ export function UsersList({errorSetter}) {
         // update owner
         (async() => {
             if(openAssignUsersDialog && participantsOfProject){
-                const owner = participantsOfProject.filter((value) => {
-                    const filterOwner = value.rolesInProject.filter((val) => parseInt(val.id) === 1);
-                    if(filterOwner && filterOwner.length > 0){
+                const owner = participantsOfProject.find((value) => {
+                    const filterOwner = value.rolesInProject.find((val) => parseInt(val.id) === 1);
+                    if(filterOwner){
                         return true;
                     }
                     return false;
                 });
-                if(owner && owner.length === 1){
-                    setOwnerParticipant(owner[0]);
+                if(owner){
+                    setOwnerParticipant(owner);
                 }
             }
             dispatch(setLoadingPrompt(null));

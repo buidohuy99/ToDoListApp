@@ -20,7 +20,7 @@ import { ThemeProvider } from '@material-ui/styles';
 import { theme as pageTheme } from './themes/WebsiteThemePalette';
 
 import { useSelector, useDispatch } from 'react-redux';
-import { CssBaseline, Grid, CircularProgress, Backdrop, Typography } from '@material-ui/core';
+import { CssBaseline, Grid, Backdrop, Typography } from '@material-ui/core';
 import { makeStyles, useTheme } from "@material-ui/core";
 
 import GlobalDrawer from './components/Drawer/Drawer';
@@ -144,7 +144,9 @@ function App() {
               style={{
                 visibility: loadingPrompt ? 'visible' : 'hidden'
               }}>
-              <CircularProgress disableShrink={true} color="inherit" style={{
+              <img src={process.env.PUBLIC_URL + '/memo-nib.gif'} style={{
+                width: 96,
+                height: 96,
                 marginBottom: 15,
               }}/>
               <Typography variant="body1" style={{ color: "white", userSelect: 'none' }}>

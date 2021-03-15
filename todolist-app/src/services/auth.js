@@ -45,8 +45,6 @@ export function AuthProvider({children}){
         }
     }
 
-
-
     // interceptor to add authorization header to request
     const default_request_interceptor = AuthAxios.interceptors.request.use(
         config => {
@@ -124,7 +122,9 @@ export function AuthProvider({children}){
     };
 
     const recheckAccessToken = async() => {
-        if(signalR.state === SR.HubConnectionState.Disconnected) return;
+        if(signalR.state === SR.HubConnectionState.Disconnected || signalR.state === SR.HubConnectionState.Disconnecting) {
+            return;
+        }
         let existingToken = localStorage.getItem(accesstoken_keyname);
         if(existingToken && existingToken !== 'null'){
             dispatch(setLoadingPrompt("Checking your login credentials, please wait..."));

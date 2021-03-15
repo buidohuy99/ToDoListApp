@@ -22,7 +22,7 @@ import { AssignUsersDialog } from '../components/Dialogs/AssignUsersDialog/Assig
 
 import { APIWorker } from '../services/axios';
 
-import { useSignalR } from '../services/signalR';
+import { useSignalR, signalR as SR } from '../services/signalR';
 import { useAuth } from '../services/auth';
 
 function ProjectDetail({width}){
@@ -41,6 +41,9 @@ function ProjectDetail({width}){
             const {data} = result.data;
             if(data.parent){
                 throw new Error("Project isnt available for viewing");
+            }
+            if(data.isDeleted){
+                throw new Error("Project is not available because its deleted");
             }
             dispatch(setCurrentViewingProject(data));
             try{
@@ -63,9 +66,25 @@ function ProjectDetail({width}){
     const currentViewingProject = useSelector((state) => state.projectDetail.currentViewingProject);
     const isConnecting = useSelector((state) => state.loading.isConnecting);
     
+    const [isUnmounted, setIsUnmounted] = useState(false);
+
+    useEffect(() => {
+        return () => {
+            setIsUnmounted(true);
+        }
+    }, []);
+
     useEffect(() => {
         signalR.on("project-detail-changed", (data) => {
-            dispatch(setCurrentViewingProject(data.projectDetail));
+            if(!isUnmounted){
+                if(data.projectDetail.isDeleted){
+                    dispatch(setLoadingPrompt("Project got deleted, redirecting to index..."));
+                    history.push('/');
+                    dispatch(setLoadingPrompt(null));
+                    return;
+                }
+                dispatch(setCurrentViewingProject(data.projectDetail));
+            }
         });
     }, []);
 
@@ -75,6 +94,9 @@ function ProjectDetail({width}){
             dispatch(setCurrentPage(PROJECT_DETAIL_PAGE));
             
             const submitRemoveViewingProject = async () => {
+                if(signalR.state === SR.HubConnectionState.Disconnected || signalR.state === SR.HubConnectionState.Disconnecting) {
+                    return;
+                }
                 dispatch(setLoadingPrompt("Submitting some data to the server...."));
                 try{
                     await signalR.invoke("RemoveFromViewingProject", parseInt(params.project_id))
@@ -97,11 +119,6 @@ function ProjectDetail({width}){
             };
         }
     }, [isConnecting, params.project_id]);
-
-    // use effect to fetch details at the start
-    useEffect(() => {
-        
-    }, []);
 
     return (<Container maxWidth="md">
         {
@@ -135,6 +152,7 @@ function ProjectDetail({width}){
                     <Grid item>
                         <Tooltip title="Add task">
                             <IconButton size="medium" onClick={() => {
+                                dispatch(setParentProject(currentViewingProject));
                                 dispatch(setOpenAddModifyTaskDialog(true));
                             }}>
                                 <AddCommentOutlined />

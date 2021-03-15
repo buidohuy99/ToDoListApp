@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
 
 import { Paper, List, ListItem, ListItemIcon, ListItemText, Collapse, makeStyles, IconButton, Typography, Grid, Tooltip } from '@material-ui/core';
 import { ExpandMore, ExpandLess, AddCommentOutlined } from '@material-ui/icons';
 import { Alert } from '@material-ui/lab';
 
 import { TaskInProject } from './TaskInProject';
+
+import { setParentProject, setOpenAddModifyTaskDialog } from '../../redux/dialogs/dialogSlice';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -14,6 +17,7 @@ const useStyles = makeStyles((theme) => ({
 
 export function ProjectSection({section}){
     const classes = useStyles();
+    const dispatch = useDispatch();
 
     const [open, setOpen] = useState(false);
 
@@ -39,7 +43,10 @@ export function ProjectSection({section}){
                     </Typography>
                 </ListItemText>
                 <Tooltip title="Add task">
-                    <IconButton>
+                    <IconButton onClick={() => {
+                        dispatch(setParentProject(section));
+                        dispatch(setOpenAddModifyTaskDialog(true));
+                    }}>
                         <AddCommentOutlined/>
                     </IconButton>
                 </Tooltip>

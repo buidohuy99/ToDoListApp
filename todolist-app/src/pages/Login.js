@@ -1,4 +1,4 @@
-import {Container, Avatar, Button, TextField, Link, Grid, Typography, CircularProgress } from '@material-ui/core';
+import {Container, Avatar, Button, TextField, Link, Grid, Typography } from '@material-ui/core';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Alert from '@material-ui/lab/Alert';
 import { makeStyles } from '@material-ui/core/styles';
@@ -167,8 +167,7 @@ export function Login(props){
               <Grid container item xs={12} justify="center" style={{
                   paddingTop: 10
               }}>
-                {isError ? <Alert severity="error">There was a problem with your login</Alert> : 
-                disableForm? <CircularProgress/> : null}
+                {isError ? <Alert severity="error">There was a problem with your login</Alert> : null}
               </Grid>
             </Grid>
           </form>

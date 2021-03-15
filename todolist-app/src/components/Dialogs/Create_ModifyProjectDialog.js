@@ -89,7 +89,6 @@ export function Create_ModifyProjectDialog({open}){
 
                         const { data } = modifiedProject.data;
                     }  
-                    //dispatch(setLoadingPrompt(null));
                     handleCloseDialog();
 
                     // const roomLink = `/room/${data[0]._id}`;

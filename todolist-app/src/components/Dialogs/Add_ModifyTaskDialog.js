@@ -8,11 +8,10 @@ import { Dialog, Grid, TextField, DialogActions, DialogContent, DialogContentTex
 import { Alert } from '@material-ui/lab';
 
 import { setLoadingPrompt } from '../../redux/loading/loadingSlice';
-import { setOpenAddModifyTaskDialog, setCurrentModifyingTask } from '../../redux/dialogs/dialogSlice';
+import { setOpenAddModifyTaskDialog, setCurrentModifyingTask, setParentProject } from '../../redux/dialogs/dialogSlice';
 
 export function Add_ModifyTaskDialog({open}){
     const dispatch = useDispatch();
-    const history = useHistory();
     const theme = useTheme();
 
     const [disableForm, setDisableForm] = useState(false);
@@ -24,6 +23,7 @@ export function Add_ModifyTaskDialog({open}){
 
     const taskToModify = useSelector((state) => state.dialog.currentModifyingTask);
     const openDialog = useSelector((state) => state.dialog.openAddModifyTaskDialog);
+    const parentProjectOfDialog = useSelector((state) => state.dialog.parentProject);
 
     const handleCloseDialog = () => {   
         dispatch(setOpenAddModifyTaskDialog(false)); 
@@ -55,6 +55,9 @@ export function Add_ModifyTaskDialog({open}){
             if(taskToModify){
                 dispatch(setCurrentModifyingTask(null));
             }   
+            if(parentProjectOfDialog){
+                dispatch(setParentProject(null));
+            }
         }}>
             <form onSubmit={async (e) => {
                 e.preventDefault();
@@ -64,22 +67,17 @@ export function Add_ModifyTaskDialog({open}){
                 try {
                     // api call here
                     if(!taskToModify){
+                        if(!parentProjectOfDialog || !parentProjectOfDialog.id){
+                            throw new Error("No project specified to add task");
+                        }
                         const newTask = await APIWorker.postAPI("/main-business/v1/task-management/task", {
                             name: taskNameField,
+                            projectId: parentProjectOfDialog.id
                         });
 
                         const { data } = newTask.data;    
-                    }else{
-                        if(!taskToModify.id || !Number.isInteger(taskToModify.id)){
-                            throw new Error("task to modify have invalid id");
-                        }
-                        const modifiedTask = await APIWorker.patchAPI(`/main-business/v1/task-management/task/${taskToModify.id}`,{
-                            name: taskNameField,
-                        });
+                    }
 
-                        const { data } = modifiedTask.data;
-                    }  
-                    //dispatch(setLoadingPrompt(null));
                     handleCloseDialog();
 
                     // const roomLink = `/room/${data[0]._id}`;

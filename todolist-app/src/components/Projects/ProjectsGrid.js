@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Grid, withWidth, CircularProgress, useTheme } from '@material-ui/core';
+import { Grid, withWidth, useTheme } from '@material-ui/core';
 import { Pagination, Alert } from '@material-ui/lab';
 
 import { ProjectGridItem } from './ProjectGridItem';
@@ -29,6 +29,14 @@ function ProjectsGrid({width}){
 
     const viewingProjects = useSelector((state) => state.projects.currentProjects);
     const searchString = useSelector((state) => state.projects.searchString);
+
+    const [isUnmounted, setIsUnmounted] = useState(false);
+
+    useEffect(() => {
+        return () => {
+            setIsUnmounted(true);
+        }
+    }, []);
 
     useEffect(() => {
         (async() => {   
@@ -118,7 +126,9 @@ function ProjectsGrid({width}){
         }
 
         signalR.on("projects-list-changed", (data) => {
-            updateGridStatus(data.projects);
+            if(!isUnmounted){
+                updateGridStatus(data.projects);
+            }
         });
     }, [searchString, maxProjectPerPage, currentPage]);
 
@@ -131,10 +141,7 @@ function ProjectsGrid({width}){
             </Grid>    
             :
             isProjectsLoading ? 
-            <Grid container item xs={12} justify="center">
-                <CircularProgress color='primary' variant='indeterminate'>
-                </CircularProgress>
-            </Grid>
+            null
             :
             viewingProjects.length <= 0 ? 
             <Grid container item xs={12} justify="center">
