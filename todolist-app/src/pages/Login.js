@@ -9,7 +9,7 @@ import { useDispatch } from 'react-redux';
 import { setCurrentPage } from '../redux/navigation/navigationSlice';
 import { setLoadingPrompt } from '../redux/loading/loadingSlice';
 
-import {useAuth, accesstoken_keyname, uid_keyname} from '../services/auth';
+import {useAuth, accesstoken_keyname} from '../services/auth';
 import { APIWorker } from '../services/axios';
 
 import {Link as RouterLink} from 'react-router-dom';
@@ -42,7 +42,7 @@ export function Login(props){
     const classes = useStyles();
 
     const [isError, setIsError] = useState(false);
-    const { set_access_token, access_token } = useAuth();
+    const { set_access_token, set_current_user } = useAuth();
     const { signalR } = useSignalR();
     const dispatch = useDispatch();
 
@@ -69,7 +69,7 @@ export function Login(props){
         if (result.status === 200) {
           const {data} = result.data;
           localStorage.setItem(accesstoken_keyname, data.token);
-          localStorage.setItem(uid_keyname, data.uid);
+          set_current_user(data.uid);
           await signalR.invoke("Login", data.uid);
           set_access_token(data.token);
           return;
@@ -119,7 +119,7 @@ export function Login(props){
               required
               fullWidth
               id="username"
-              label="Username"
+              label="Username/Email"
               name="username"
               autoComplete="username"
               autoFocus

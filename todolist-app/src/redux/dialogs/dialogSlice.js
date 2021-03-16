@@ -10,16 +10,17 @@ export const dialogSlice = createSlice({
     currentModifyingProject: null,
     
     //add Modify task dialog
-    currentModifyingTask: null,
     openAddModifyTaskDialog: false,
 
     //Assign user dialog
     openAssignUsersDialog: false,
     usersListOfAssignDialog: null,
-    participantsOfAssignDialog: null,
     isDialogInSearchMode: false,
     isLoadingUsersList: false,
-    canUserDoAssignment: false,
+
+    //Assign to task dialog
+    openAssignToTaskDialog: false,
+    currentModifyingTask: null,
 
     //Edit user roles dialog
     openUserRolesEditDialog: false,
@@ -56,14 +57,12 @@ export const dialogSlice = createSlice({
     setUserListsForAssignDialog: (state, action) => {
       state.usersListOfAssignDialog = action.payload ? action.payload : null;
     },
-    setParticipantsOfAssignDialog: (state, action) => {
-      state.participantsOfAssignDialog = action.payload ? action.payload : null;
-    },
     setIsLoadingUsersList: (state, action) => {
       state.isLoadingUsersList = Boolean(action.payload);
     },
-    setCanUserDoAssignment: (state, action) => {
-      state.canUserDoAssignment = Boolean(action.payload);
+
+    setOpenAssignToTaskDialog: (state, action) => {
+      state.openAssignToTaskDialog = Boolean(action.payload);
     },
 
     setOpenUserRolesEditDialog: (state, action) => {
@@ -80,8 +79,9 @@ export const { setCurrentModifyingProject, setOpenCreateModifyProjectDialog, set
   setCurrentModifyingTask, setOpenAddModifyTaskDialog, 
   
   setOpenAssignUsersDialog, setIsDialogInSearchMode, 
-  setUserListsForAssignDialog, setParticipantsOfAssignDialog, setIsLoadingUsersList,
-  setCanUserDoAssignment,
+  setUserListsForAssignDialog, setIsLoadingUsersList,
+
+  setOpenAssignToTaskDialog,
 
   setOpenUserRolesEditDialog, setUserForUserRolesEditDialog } = dialogSlice.actions;
 

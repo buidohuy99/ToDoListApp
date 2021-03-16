@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import Slide from '@material-ui/core/Slide';
 import PropTypes from 'prop-types';
 
-import { useAuth, uid_keyname } from '../../services/auth';
+import { useAuth } from '../../services/auth';
 
 import { AppBar, Toolbar, Typography, IconButton, Button, Grid } from '@material-ui/core';
 import { makeStyles, useScrollTrigger } from "@material-ui/core";
@@ -91,13 +91,13 @@ export default function DefaultAppBar(props) {
     const history = useHistory();
 
     const classes = useStyles();
-    const { access_token, set_access_token } = useAuth();
+    const { access_token, set_access_token, current_user } = useAuth();
     const { signalR } = useSignalR();
 
     const handleLogOut = async () => {
       dispatch(setLoadingPrompt("Logging you out..."));
       try{
-        await signalR.invoke("Logout", parseInt(localStorage.getItem(uid_keyname)));
+        await signalR.invoke("Logout", parseInt(current_user));
       } catch (e){
         console.log(e);
       }

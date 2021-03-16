@@ -19,8 +19,9 @@ import NotFoundPage from './pages/NotFoundPage';
 import { ThemeProvider } from '@material-ui/styles';
 import { theme as pageTheme } from './themes/WebsiteThemePalette';
 
+import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { CssBaseline, Grid, Backdrop, Typography } from '@material-ui/core';
+import { CssBaseline, Grid, Backdrop, Typography, Slide, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from '@material-ui/core';
 import { makeStyles, useTheme } from "@material-ui/core";
 
 import GlobalDrawer from './components/Drawer/Drawer';
@@ -30,15 +31,20 @@ import {NAVIGATION_DRAWER_WIDTH} from './constants/constants';
 import { AuthProvider } from './services/auth';
 import { SignalRProvider } from './services/signalR';
 
+import { setGlobalError } from './redux/loading/loadingSlice';
+
 const useStyles = makeStyles((theme) => ({
   loadingBackdrop: {
-    zIndex: theme.zIndex.drawer + 1,
+    zIndex: theme.zIndex.drawer + 2,
     color: "#fff",
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     overflowY: 'hidden'
+  },
+  globalErrorDialog: {
+    zIndex: theme.zIndex.drawer + 1,
   },
   content: {
     flexGrow: 1,
@@ -78,12 +84,18 @@ const useStyles = makeStyles((theme) => ({
   toolbar: theme.mixins.toolbar,
 }));
 
+const Transition = React.forwardRef(function Transition(props, ref) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
+
 function App() {
   const classes = useStyles();
   const theme = useTheme();
+  const dispatch = useDispatch();
 
   const isDrawerOpen = Boolean(useSelector((state) => state.navigation.isNavigationOpened));
   const loadingPrompt = useSelector((state) => state.loading.loadingPrompt);
+  const globalError = useSelector((state) => state.loading.globalError);
 
   return (
     <ThemeProvider theme={pageTheme}>
@@ -153,6 +165,34 @@ function App() {
                 {loadingPrompt}
               </Typography>
             </Backdrop>
+
+            {/* Error dialog */}
+            <Dialog
+              fullWidth
+              maxWidth="sm"
+              open={globalError ? true : false}
+              TransitionComponent={Transition}
+              keepMounted
+              onClose={() => {
+                dispatch(setGlobalError(null));
+              }}
+            >
+              <DialogTitle>
+                <Typography color="secondary">{"Đã xảy ra lỗi..."}</Typography>
+              </DialogTitle>
+              <DialogContent>
+                <DialogContentText id="alert-dialog-slide-description">
+                  {globalError}
+                </DialogContentText>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => {
+                  dispatch(setGlobalError(null));
+                }} color="secondary">
+                  Đóng
+                </Button>
+              </DialogActions>
+            </Dialog>
             
           </AuthProvider>     
         </SignalRProvider>

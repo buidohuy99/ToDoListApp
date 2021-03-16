@@ -5,9 +5,6 @@ import { FolderShared as ProjectIcon } from '@material-ui/icons';
 
 import { Link, useHistory } from 'react-router-dom';
 
-import { useDispatch } from 'react-redux';
-import { setCurrentModifyingProject, setOpenCreateModifyProjectDialog } from '../../redux/dialogs/dialogSlice';
-
 const useStyles = makeStyles((theme) => ({
     projectName: {
         fontWeight: 'bold',
@@ -43,8 +40,6 @@ export function ProjectGridItem({project}){
     const theme = useTheme();
     const classes = useStyles();
     const history = useHistory();
-
-    const dispatch = useDispatch();
 
     return (
         <Grid container item xs={12} sm={6} lg={4}>
@@ -102,10 +97,9 @@ export function ProjectGridItem({project}){
                         }}>
                             <Grid item>
                                 <Button variant='contained' color='secondary' size='small' onClick={() => {
-                                    dispatch(setCurrentModifyingProject(project));
-                                    dispatch(setOpenCreateModifyProjectDialog(true));
+                                    history.push(project && project.id ? `/project/${project.id}` : "#");
                                 }}>
-                                    Modify
+                                    View
                                 </Button>
                             </Grid>     
                         </Grid>

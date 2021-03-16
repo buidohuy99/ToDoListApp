@@ -3,7 +3,7 @@ import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useHistory } from 'react-router-dom';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { setLoadingPrompt, setIsConnecting } from '../redux/loading/loadingSlice';
+import { setLoadingPrompt } from '../redux/loading/loadingSlice';
 
 import { useSignalR, signalR as SR } from './signalR';
 
@@ -11,7 +11,6 @@ import {AuthAxios} from './axios';
 
 // Key name for local storage entries, relating authentication stuffs
 export const accesstoken_keyname = process.env.REACT_APP_ACCESSTOKEN_KEYNAME;
-export const uid_keyname = "userId";
 
 export const AuthContext = createContext();
 
@@ -26,6 +25,7 @@ export function useAuth() {
         //=> get/set access_token : null means not authenticated, !null means authenticated
 export function AuthProvider({children}){
     const [accessToken, setAccessToken] = useState(localStorage.getItem(accesstoken_keyname));
+    const [userid, setUserId] = useState(null);
     const dispatch = useDispatch();
     const history = useHistory();
 
@@ -36,11 +36,11 @@ export function AuthProvider({children}){
         try{
           const {token, uid} = (await AuthAxios.post(process.env.REACT_APP_API_URL + '/main-business/v1/authentication/refresh-token')).data;
           localStorage.setItem(accesstoken_keyname, token);
-          localStorage.setItem(uid_keyname, uid);
+          setUserId(uid);
           return token;
         }catch(e){
           localStorage.removeItem(accesstoken_keyname);
-          localStorage.removeItem(uid_keyname);
+          setUserId(null);
           return null;
         }
     }
@@ -108,7 +108,7 @@ export function AuthProvider({children}){
             localStorage.setItem(accesstoken_keyname, data);
         }else{
             localStorage.removeItem(accesstoken_keyname);
-            localStorage.removeItem(uid_keyname);
+            setUserId(null);
         }
         setAccessToken(data);
     }
@@ -118,7 +118,9 @@ export function AuthProvider({children}){
         // access_token getter
         access_token: accessToken,
         // access_token setter
-        set_access_token: setToken
+        set_access_token: setToken,
+        current_user: userid,
+        set_current_user: setUserId
     };
 
     const recheckAccessToken = async() => {
@@ -129,11 +131,13 @@ export function AuthProvider({children}){
         if(existingToken && existingToken !== 'null'){
             dispatch(setLoadingPrompt("Checking your login credentials, please wait..."));
             try{      
-                // vvvvv Check if access token is valid. if not valid will try to refresh the token => if refresh is successful, access token inside storage will automatically update. Otherwise, will throw an error vvvvvvvvv
-                await AuthAxios.post(process.env.REACT_APP_API_URL + '/main-business/v1/authentication/check-token-valid');            
+                // vvvvv Check if access token is valid, if valid will set uid. if not valid will try to refresh the token => if refresh is successful, access token inside storage will automatically update. Otherwise, will throw an error vvvvvvvvv
+                const response = await AuthAxios.post(process.env.REACT_APP_API_URL + '/main-business/v1/authentication/check-token-valid');            
+                const {data} = response.data;
                 existingToken = localStorage.getItem(accesstoken_keyname);
-                await signalR.invoke("Login", parseInt(localStorage.getItem(uid_keyname)));
+                setUserId(data);
                 setToken(existingToken);
+                await signalR.invoke("Login", parseInt(data));
             }catch(err){
                 console.log(err);
                 setToken(null);

@@ -5,11 +5,12 @@ import { useHistory } from 'react-router-dom';
 import { Dialog, DialogActions, DialogContent, DialogTitle, InputAdornment, IconButton, TextField, FormControl, Input, Grid, Hidden, Button, useTheme, makeStyles, Typography } from '@material-ui/core';
 import { Alert } from '@material-ui/lab';
 
-import { setOpenAssignUsersDialog, setParentProject, setIsDialogInSearchMode, setIsLoadingUsersList, setUserListsForAssignDialog, setParticipantsOfAssignDialog, setCanUserDoAssignment, setUserForUserRolesEditDialog, setOpenUserRolesEditDialog } from '../../../redux/dialogs/dialogSlice';
+import { setOpenAssignUsersDialog, setParentProject, setIsDialogInSearchMode, setIsLoadingUsersList, setUserListsForAssignDialog, setUserForUserRolesEditDialog, setOpenUserRolesEditDialog } from '../../../redux/dialogs/dialogSlice';
 import { setLoadingPrompt } from '../../../redux/loading/loadingSlice';
+import { setParticipantsOfViewingProject } from '../../../redux/projectDetail/projectDetailSlice';
 
 import { APIWorker } from '../../../services/axios';
-import { uid_keyname } from '../../../services/auth';
+import { useAuth } from '../../../services/auth';
 
 import { UsersList } from '../../../components/Dialogs/AssignUsersDialog/UsersList';
 import { RolesEditDialog } from '../../../components/Dialogs/AssignUsersDialog/RolesEditDialog';
@@ -20,6 +21,7 @@ export function AssignUsersDialog({open}){
     const dispatch = useDispatch();
     const history = useHistory();
     const {signalR} = useSignalR();
+    const { current_user } = useAuth();
 
     const [error, setError] = useState(null);
     const [disableForm, setDisableForm] = useState(false);
@@ -30,38 +32,17 @@ export function AssignUsersDialog({open}){
     const parentProjectOfDialog = useSelector((state) => state.dialog.parentProject);
     const isDialogInSearchMode = useSelector((state) => state.dialog.isDialogInSearchMode);
     const usersListForDialog = useSelector((state) => state.dialog.usersListOfAssignDialog);
-    const participantsOfProject = useSelector((state) => state.dialog.participantsOfAssignDialog);
 
     const userRolesDialogIsOpen = useSelector((state) => state.dialog.openUserRolesEditDialog);
     const userForUserRolesDialog = useSelector((state) => state.dialog.userForUserRolesEditDialog);
 
-    const canUserDoAssignment = useSelector((state) => state.dialog.canUserDoAssignment);
+    const canUserDoAssignment = useSelector((state) => state.projectDetail.canUserDoAssignment);
 
     const handleCloseDialog = () => {   
         dispatch(setOpenAssignUsersDialog(false)); 
         dispatch(setOpenUserRolesEditDialog(false));
         setSearchFieldValue(null);
         dispatch(setLoadingPrompt(null));
-    };
-
-    const getParticipants = async() => {
-        setDisableForm(true);
-        dispatch(setIsLoadingUsersList(true));
-        dispatch(setIsDialogInSearchMode(false));
-        try{
-            if(!parentProjectOfDialog || !parentProjectOfDialog.id){
-                throw new Error("No project specified to assign participants");
-            }
-            const query = `ProjectId=${parentProjectOfDialog.id}`;
-            const result = await APIWorker.callAPI('get', '/main-business/v1/participation-management/participations?' + query);
-            const { data } = result.data;
-            dispatch(setParticipantsOfAssignDialog(data.users));
-        }catch(e){
-            console.log(e);
-            setError("A problem occurred while fetching participants of this project");
-        }
-        dispatch(setIsLoadingUsersList(false));
-        setDisableForm(false);
     };
 
     const searchUsers = async(keyword) => {
@@ -86,29 +67,6 @@ export function AssignUsersDialog({open}){
         dispatch(setOpenAssignUsersDialog(open));
     }, [open]);
 
-    useEffect(() => {
-        if(openDialog && participantsOfProject){
-            dispatch(setLoadingPrompt("Checking your permissions..."));
-            (async() => {
-                const currentUser = localStorage.getItem(uid_keyname);
-                if(currentUser){
-                    const entry = participantsOfProject.find((value) => parseInt(value.userDetail.id) === parseInt(currentUser));
-                    if(entry){
-                        // only allow user with PM, Leader or Owner to assign users
-                        const foundAllow = entry.rolesInProject.find(role => parseInt(role.id) < 4);
-                        if(foundAllow){
-                            dispatch(setCanUserDoAssignment(true));
-                            dispatch(setLoadingPrompt(null));
-                            return;
-                        }
-                    }
-                    dispatch(setCanUserDoAssignment(false));
-                }
-                dispatch(setLoadingPrompt(null));
-            })();
-        }
-    }, [openDialog, participantsOfProject]);
-
     const [isUnmounted, setIsUnmounted] = useState(false);
 
     useEffect(() => {
@@ -123,11 +81,11 @@ export function AssignUsersDialog({open}){
             if(!isUnmounted){
                 setDisableForm(true);
                 dispatch(setLoadingPrompt("An update for participants came from the server..."));
-                dispatch(setParticipantsOfAssignDialog(data.users));
+                dispatch(setParticipantsOfViewingProject(data.users));
 
                 (async() => {
                     // check if got kicked
-                    const currentUser = localStorage.getItem(uid_keyname);
+                    const currentUser = current_user;
                     const found = data.users.find((e) => parseInt(e.userDetail.id) === parseInt(currentUser));
                 
                     if(!found){
@@ -171,9 +129,6 @@ export function AssignUsersDialog({open}){
         }}
         open={openDialog}
         disableBackdropClick={disableForm}
-        onEnter={() => {
-            getParticipants();
-        }}
         onClose={() => {
             handleCloseDialog();         
         }}
@@ -184,6 +139,7 @@ export function AssignUsersDialog({open}){
             if(parentProjectOfDialog){
                 dispatch(setParentProject(null));
             }
+            dispatch(setIsDialogInSearchMode(false));
         }}>
         <DialogTitle id="form-dialog-title">Users</DialogTitle>
         <DialogContent>
@@ -203,7 +159,7 @@ export function AssignUsersDialog({open}){
                             }
                             setSearchFieldValue(e.target.value === "" ? null : e.target.value);
                             if(!e.target.value || e.target.value === ""){
-                                getParticipants();
+                                dispatch(setIsDialogInSearchMode(false));
                             }else{
                                 searchUsers(e.target.value);
                             }

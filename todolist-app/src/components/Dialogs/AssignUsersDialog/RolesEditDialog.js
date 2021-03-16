@@ -188,7 +188,7 @@ export function RolesEditDialog(){
     const userForDialog = useSelector((state) => state.dialog.userForUserRolesEditDialog);
     const parentProjectOfDialog = useSelector((state) => state.dialog.parentProject);
 
-    const canUserDoAssignment = useSelector((state) => state.dialog.canUserDoAssignment);
+    const canUserDoAssignment = useSelector((state) => state.projectDetail.canUserDoAssignment);
 
     const handleCloseDialog = () => {   
         dispatch(setOpenUserRolesEditDialog(false)); 

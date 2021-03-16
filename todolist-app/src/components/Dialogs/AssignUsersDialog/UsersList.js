@@ -7,23 +7,24 @@ import { PersonAddOutlined, MoreHoriz, RemoveCircle } from '@material-ui/icons';
 import { setLoadingPrompt } from '../../../redux/loading/loadingSlice';
 
 import { setOpenUserRolesEditDialog, setUserForUserRolesEditDialog } from '../../../redux/dialogs/dialogSlice';
-import { uid_keyname } from '../../../services/auth';
+import { useAuth } from '../../../services/auth';
 import { APIWorker } from '../../../services/axios';
 
 import { useEffect, useState } from 'react';
 
 export function UsersList({errorSetter}) {
     const dispatch = useDispatch();
+    const { current_user } = useAuth();
 
     const usersListForDialog = useSelector((state) => state.dialog.usersListOfAssignDialog);
-    const participantsOfProject = useSelector((state) => state.dialog.participantsOfAssignDialog);
+    const participantsOfProject = useSelector((state) => state.projectDetail.participantsOfViewingProject);
     const isLoadingUsersList = useSelector((state) => state.dialog.isLoadingUsersList);
     const isDialogInSearchMode = useSelector((state) => state.dialog.isDialogInSearchMode);
 
     const openAssignUsersDialog = useSelector((state) => state.dialog.openAssignUsersDialog);
 
     const parentProjectOfDialog = useSelector((state) => state.dialog.parentProject);
-    const canUserDoAssignment = useSelector((state) => state.dialog.canUserDoAssignment);
+    const canUserDoAssignment = useSelector((state) => state.projectDetail.canUserDoAssignment);
 
     const [ownerParticipant, setOwnerParticipant] = useState(null);
 
@@ -178,7 +179,7 @@ export function UsersList({errorSetter}) {
                                 <TableCell align="right">
                                     {
                                     (() => {
-                                    const currentUser = localStorage.getItem(uid_keyname);
+                                    const currentUser = current_user;
                                     if(!currentUser){
                                         return null;
                                     }

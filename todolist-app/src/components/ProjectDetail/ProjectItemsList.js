@@ -38,7 +38,7 @@ export function ProjectItemsList() {
                         <ListSubheader component={Grid} xs={12} item>
                             Tasks ~ 
                         </ListSubheader>
-                    } component={Grid} container item spacing={1}>
+                    } component={Grid} container item spacing={1} justify="center">
 
                         {currentViewingProject && currentViewingProject.childrenTasks && currentViewingProject.childrenTasks.length > 0 ? 
                             currentViewingProject.childrenTasks.map((val, idx) => (
@@ -50,13 +50,15 @@ export function ProjectItemsList() {
                             currentViewingProject && currentViewingProject.childrenTasks && currentViewingProject.childrenTasks.length <= 0 ?
                             <Grid container item xs={12} justify="center">
                                 <Typography variant="body2" style={{
-                                    fontStyle: 'italic'
+                                    fontStyle: 'italic',
+                                    textAlign: 'center'
                                 }}>
                                     There are no child tasks
                                 </Typography>
                             </Grid>
                         : 
-                        null}
+                        null
+                        }
                         
 
                     </List>
@@ -67,7 +69,7 @@ export function ProjectItemsList() {
                         <ListSubheader component={Grid} xs={12} item>
                             Groups   
                         </ListSubheader>
-                    } component={Grid} container item spacing={3}>
+                    } component={Grid} container item spacing={3} justify="center">
 
                         {currentViewingProject && currentViewingProject.children && currentViewingProject.children.length > 0 ? 
                             currentViewingProject.children.map((val, idx) => {
@@ -80,7 +82,8 @@ export function ProjectItemsList() {
                         : currentViewingProject && currentViewingProject.children && currentViewingProject.children.length <= 0 ?
                             <Grid container item xs={12} justify="center">
                                 <Typography variant="body2" style={{
-                                    fontStyle: 'italic'
+                                    fontStyle: 'italic',
+                                    textAlign: 'center'
                                 }}>
                                     There are no child projects
                                 </Typography>

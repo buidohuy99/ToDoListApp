@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useHistory } from 'react-router-dom';
 
 import { APIWorker } from '../../services/axios';
 
@@ -37,6 +36,8 @@ export function Add_ModifyTaskDialog({open}){
     useEffect(() => {
         if(taskToModify){
             setTaskNameField(taskToModify.name);
+        }else{
+            setTaskNameField(null);
         }
     }, [taskToModify]);
 
