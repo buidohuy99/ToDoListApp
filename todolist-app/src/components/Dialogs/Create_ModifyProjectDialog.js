@@ -61,7 +61,7 @@ export function Create_ModifyProjectDialog({open}){
                 dispatch(setParentProject(null));
             }
         }}>
-            <DialogTitle id="form-dialog-title">{parentProjectOfDialog ? "Child project" : "Project"}</DialogTitle>
+            <DialogTitle id="form-dialog-title">{parentProjectOfDialog ? "Tasks collection" : "Project"}</DialogTitle>
             <form onSubmit={async (e) => {
                 e.preventDefault();
                 setDisableForm(true);
@@ -79,7 +79,7 @@ export function Create_ModifyProjectDialog({open}){
                         const { data } = newProject.data;    
                     }else{
                         if(!projectToModify.id || !Number.isInteger(projectToModify.id)){
-                            throw new Error("project to modify have invalid id");
+                            throw new Error("Item to modify have invalid id");
                         }
                         const modifiedProject = await APIWorker.patchAPI(`/main-business/v1/project-management/project/${projectToModify.id}`,{
                             name: projectNameField,
@@ -96,14 +96,14 @@ export function Create_ModifyProjectDialog({open}){
                 } catch (e) {
                     dispatch(setLoadingPrompt(null));
                     setDisableForm(false);
-                    setError(`There has been a problem while ${projectToModify ? "modifying" : "creating"} the project, please recheck your fields or internet connection`);
+                    setError(`There has been a problem while ${projectToModify ? "modifying" : "creating"} the item, please recheck your fields or internet connection`);
                     return;
                 }
             }}>
                 <DialogContent>
                 <DialogContentText>
                     {
-                        `Enter these information below to ${projectToModify ? 'modify' : 'create'} a ${parentProjectOfDialog ? 'child' : ''} project:`
+                        `Enter these information below to ${projectToModify ? 'modify' : 'create'} a ${parentProjectOfDialog ? 'tasks collection' : 'project'} :`
                     }
                 </DialogContentText>
                 <Grid container item xs={12}>
@@ -112,9 +112,8 @@ export function Create_ModifyProjectDialog({open}){
                             <TextField
                                 variant="outlined"
                                 required
-                                autoFocus
                                 id="ProjectName"
-                                label="Project's name"
+                                label="Name"
                                 fullWidth
                                 disabled={disableForm}
                                 value={projectNameField ? projectNameField : ""}
@@ -133,9 +132,8 @@ export function Create_ModifyProjectDialog({open}){
                         }}>
                             <TextField
                                 variant="outlined"
-                                autoFocus
                                 id="ProjectDescription"
-                                label="Project's description"
+                                label="Description"
                                 fullWidth
                                 disabled={disableForm}
                                 value={projectDescriptionField ? projectDescriptionField : ""}

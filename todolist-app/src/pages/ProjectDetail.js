@@ -234,7 +234,7 @@ function ProjectDetail({width}){
                     {/* add child project */}
                     <Grid item>
                         {canUserDoAssignment ?
-                        <Tooltip title="Add child project">
+                        <Tooltip title="Add a task collection">
                             <IconButton size="medium" onClick={() => {
                                 dispatch(setParentProject(currentViewingProject));
                                 dispatch(setOpenCreateModifyProjectDialog(true));

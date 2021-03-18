@@ -31,12 +31,12 @@ export function ProjectItemsList() {
                     {(currentViewingProject && currentViewingProject.description ? currentViewingProject.description : " < No description found... >")}
                 </Typography>
             </Grid>
-            <List component={Grid} container item spacing={1}>
+            <List component={Grid} container item>
                 {/* print out all tasks in project first */}
                 <Grid item xs={12}>
                     <List subheader={
                         <ListSubheader component={Grid} xs={12} item>
-                            Tasks ~ 
+                            {"Tasks"} 
                         </ListSubheader>
                     } component={Grid} container item spacing={1} justify="center">
 
@@ -67,9 +67,9 @@ export function ProjectItemsList() {
                 <Grid item xs={12}>
                     <List subheader={
                         <ListSubheader component={Grid} xs={12} item>
-                            Groups   
+                            {"Tasks collections"}
                         </ListSubheader>
-                    } component={Grid} container item spacing={3} justify="center">
+                    } component={Grid} container item spacing={1} justify="center">
 
                         {currentViewingProject && currentViewingProject.children && currentViewingProject.children.length > 0 ? 
                             currentViewingProject.children.map((val, idx) => {
@@ -85,7 +85,7 @@ export function ProjectItemsList() {
                                     fontStyle: 'italic',
                                     textAlign: 'center'
                                 }}>
-                                    There are no child projects
+                                    There are no collections
                                 </Typography>
                             </Grid>
                         : null}

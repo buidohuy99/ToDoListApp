@@ -101,7 +101,6 @@ export function Add_ModifyTaskDialog({open}){
                             <TextField
                                 variant="outlined"
                                 required
-                                autoFocus
                                 id="TaskName"
                                 placeholder="Type in your task name"
                                 fullWidth

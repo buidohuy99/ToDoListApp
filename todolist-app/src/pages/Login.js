@@ -122,7 +122,6 @@ export function Login(props){
               label="Username/Email"
               name="username"
               autoComplete="username"
-              autoFocus
               onChange={(e) => {
                 e.target.value = e.target.value.slice(0,Math.min(40, e.target.value.length));
                 setUsername(e.target.value);

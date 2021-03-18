@@ -165,6 +165,7 @@ const useStyles = makeStyles((theme) => ({
                   id="email"
                   label="Email Address"
                   name="email"
+                  type="email"
                   autoComplete="email"
                 />
               </Grid>
@@ -178,6 +179,7 @@ const useStyles = makeStyles((theme) => ({
                   id="phone-number"
                   label="Phone number"
                   name="Phone number"
+                  type="tel"
                   autoComplete="mobile"
                 />
               </Grid>
@@ -192,7 +194,6 @@ const useStyles = makeStyles((theme) => ({
                   fullWidth
                   id="firstName"
                   label="First Name"
-                  autoFocus
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -205,7 +206,6 @@ const useStyles = makeStyles((theme) => ({
                   id="lastName"
                   label="Last Name"
                   name="lastName"
-                  autoComplete="lname"
                 />
               </Grid>
   
