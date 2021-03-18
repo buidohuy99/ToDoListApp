@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { setCurrentPage } from '../redux/navigation/navigationSlice';
-import { setLoadingPrompt }  from '../redux/loading/loadingSlice';
+import { setLoadingPrompt, setGlobalError }  from '../redux/loading/loadingSlice';
 import { setCurrentViewingProject, setParticipantsOfViewingProject, setCanUserDoAssignment } from '../redux/projectDetail/projectDetailSlice';
 import { setOpenAddModifyTaskDialog, setOpenCreateModifyProjectDialog, setParentProject, setCurrentModifyingProject, setOpenAssignUsersDialog} from '../redux/dialogs/dialogSlice';
 
@@ -12,9 +12,9 @@ import { PROJECT_DETAIL_PAGE } from '../constants/constants';
 
 import { ProjectItemsList } from '../components/ProjectDetail/ProjectItemsList';
 
-import { Container, Grid, Typography, withWidth, useTheme, IconButton, Tooltip } from '@material-ui/core';
+import { Container, Grid, Typography, withWidth, useTheme, IconButton, Tooltip, Button } from '@material-ui/core';
 import { Alert } from '@material-ui/lab';
-import { AddCommentOutlined, PostAddOutlined, CreateOutlined, GroupOutlined } from '@material-ui/icons';
+import { AddCommentOutlined, PostAddOutlined, CreateOutlined, GroupOutlined, DeleteSweep } from '@material-ui/icons';
 
 import { Create_ModifyProjectDialog } from '../components/Dialogs/Create_ModifyProjectDialog';
 import { Add_ModifyTaskDialog } from '../components/Dialogs/Add_ModifyTaskDialog';
@@ -44,6 +44,7 @@ function ProjectDetail({width}){
     const [isUnmounted, setIsUnmounted] = useState(false);
     
     const getProjectDetail = async() => {
+        dispatch(setLoadingPrompt("Loading project's details..."));
         try{
             const result = await APIWorker.callAPI('get', `/main-business/v1/project-management/project/${params.project_id}`);
             const {data} = result.data;
@@ -84,6 +85,21 @@ function ProjectDetail({width}){
         }catch(e){
             console.log(e);
             setError("A problem occurred while fetching participants of this project");
+        }
+        dispatch(setLoadingPrompt(null));
+    };
+
+    const deleteProject = async() => {
+        dispatch(setLoadingPrompt("Processing your deletion request..."));
+        try{
+            if(!currentViewingProject || !currentViewingProject.id){
+                throw new Error("No project specified to delete");
+            }
+            const result = await APIWorker.callAPI('delete', `/main-business/v1/project-management/project/${parseInt(currentViewingProject.id)}`);
+            const { data } = result.data;
+        }catch(e){
+            console.log(e);
+            dispatch(setGlobalError("Project deletion request encountered an error ~"));
         }
         dispatch(setLoadingPrompt(null));
     };
@@ -133,7 +149,7 @@ function ProjectDetail({width}){
                 dispatch(setCurrentViewingProject(data.projectDetail));
             }
         });
-    }, []);
+    }, [isUnmounted]);
 
     useEffect(() => {
         if(!isConnecting){
@@ -253,6 +269,21 @@ function ProjectDetail({width}){
                             </IconButton>
                         </Tooltip>
                     </Grid>
+                </Grid>
+                <Grid container item xs={12} justify="center">
+                    <Tooltip title="Delete this project ?" placement="top">
+                        <IconButton style={{
+                            position: 'fixed',
+                            bottom: theme.spacing(2),
+                            right: theme.spacing(2),
+                            background: theme.palette.primary.main,
+                            zIndex: 5,
+                        }} onClick={() => {
+                            deleteProject();
+                        }}>
+                            <DeleteSweep fontSize="large" style={{ color : 'white' }}/>
+                        </IconButton>
+                    </Tooltip>
                 </Grid>
 
                 { /* List of subprojects and tasks here */ }

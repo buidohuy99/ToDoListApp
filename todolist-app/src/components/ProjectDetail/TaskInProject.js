@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { Grid, Paper, ListItem, ListItemIcon, ListItemText, ListItemSecondaryAction, makeStyles, IconButton, Typography, Checkbox, Tooltip, useTheme } from '@material-ui/core';
 import { FiberManualRecord } from '@material-ui/icons';
-import { RemoveCircleOutline, AssignmentInd, MoreHoriz } from '@material-ui/icons';
+import { RemoveCircle, AssignmentInd, MoreHoriz } from '@material-ui/icons';
 
 import { setLoadingPrompt, setGlobalError } from '../../redux/loading/loadingSlice';
 import { setCurrentModifyingTask, setOpenAssignToTaskDialog } from '../../redux/dialogs/dialogSlice';
@@ -33,7 +33,6 @@ export function TaskInProject({isNested, task}){
     const canUserDoAssignment = useSelector((state) => state.projectDetail.canUserDoAssignment);
 
     const onCheckBoxStateChange = async(event) => {
-
         if(task && task.assignedFor && task.assignedFor.id && parseInt(task.assignedFor.id) === parseInt(current_user)){
             const checkState = Boolean(event.target.checked);
 
@@ -44,14 +43,30 @@ export function TaskInProject({isNested, task}){
                 }
                 const result = await APIWorker.patchAPI(`/main-business/v1/task-management/task/${task.id}`, {
                     isTaskDone: checkState,
-                });
-                dispatch(setLoadingPrompt(null));
+                });  
             }catch(e){
                 console.log(e);
                 dispatch(setGlobalError("Cannot update done status of task"));
             } 
+            dispatch(setLoadingPrompt(null));
         }
     };
+
+    const onRemoveTaskClick = async() => {
+        if(task && task.id){
+            dispatch(setLoadingPrompt('Processing task deletion...'));
+            try{
+                if(!task || !task.id){
+                    throw new Error("Cannot delete an inexistent task");
+                }
+                const result = await APIWorker.callAPI('delete', `/main-business/v1/task-management/task/${task.id}`);
+            }catch(e){
+                console.log(e);
+                dispatch(setGlobalError("Cannot delete task"));
+            } 
+            dispatch(setLoadingPrompt(null));
+        }
+    }
 
     useEffect(() => {
         if(!task){
@@ -140,9 +155,9 @@ export function TaskInProject({isNested, task}){
                 canUserDoAssignment ? 
                 <Tooltip title="Delete task...">
                     <IconButton size="small" onClick={() => {
-
+                        onRemoveTaskClick();
                     }}>
-                        <RemoveCircleOutline/>
+                        <RemoveCircle/>
                     </IconButton>
                 </Tooltip> : null
                 }

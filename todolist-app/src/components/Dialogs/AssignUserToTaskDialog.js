@@ -99,7 +99,7 @@ export function AssignUserToTaskDialog({open}){
                                             !taskToModify.assignedBy ? 
                                             "Cannot find user"
                                             :
-                                            taskToModify.assignedBy.userName + " - " + taskToModify.assignedBy.email
+                                            taskToModify.assignedBy.userName + " ( at " + taskToModify.assignedBy.email + " ) "
                                             }
                                         </TableCell>
                                         <TableCell>
@@ -110,7 +110,7 @@ export function AssignUserToTaskDialog({open}){
                                             !taskToModify.assignedFor ? 
                                             "Cannot find user"
                                             :
-                                            taskToModify.assignedFor.userName + " - " + taskToModify.assignedFor.email
+                                            taskToModify.assignedFor.userName + " ( at " + taskToModify.assignedFor.email + " ) "
                                             }
                                         </TableCell>
                                     </TableRow>

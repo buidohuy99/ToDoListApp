@@ -20,7 +20,7 @@ import { useSignalR } from '../../../services/signalR';
 export function AssignUsersDialog({open}){
     const dispatch = useDispatch();
     const history = useHistory();
-    const {signalR} = useSignalR();
+    const { signalR } = useSignalR();
     const { current_user } = useAuth();
 
     const [error, setError] = useState(null);
@@ -78,15 +78,14 @@ export function AssignUsersDialog({open}){
     // signalr sent data to display
     useEffect(() => {
         signalR.on("project-participants-list-changed", (data) => {
-            if(!isUnmounted){
-                setDisableForm(true);
-                dispatch(setLoadingPrompt("An update for participants came from the server..."));
-                dispatch(setParticipantsOfViewingProject(data.users));
-
+            if(!isUnmounted && current_user){
                 (async() => {
+                    setDisableForm(true);
+                    dispatch(setLoadingPrompt("An update for participants came from the server..."));
+                    dispatch(setParticipantsOfViewingProject(data.users));
+
                     // check if got kicked
-                    const currentUser = current_user;
-                    const found = data.users.find((e) => parseInt(e.userDetail.id) === parseInt(currentUser));
+                    const found = data.users.find((e) => parseInt(e.userDetail.id) === parseInt(current_user));
                 
                     if(!found){
                         dispatch(setLoadingPrompt("You got kicked out from the project, redirecting to index..."));
@@ -120,7 +119,7 @@ export function AssignUsersDialog({open}){
                 })();
             }
         });
-    }, [usersListForDialog, userForUserRolesDialog, userRolesDialogIsOpen]);
+    }, [usersListForDialog, userForUserRolesDialog, userRolesDialogIsOpen, current_user, isUnmounted]);
 
     return (<Dialog 
         fullScreen

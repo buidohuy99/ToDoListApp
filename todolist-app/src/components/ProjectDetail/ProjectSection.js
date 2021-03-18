@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 import { Paper, List, ListItem, ListItemIcon, ListItemText, Collapse, makeStyles, IconButton, Typography, Grid, Tooltip } from '@material-ui/core';
-import { ExpandMore, ExpandLess, AddCommentOutlined } from '@material-ui/icons';
-import { Alert } from '@material-ui/lab';
+import { ExpandMore, ExpandLess, AddCommentOutlined, RemoveCircle } from '@material-ui/icons';
 
 import { TaskInProject } from './TaskInProject';
 
+import { setLoadingPrompt, setGlobalError } from '../../redux/loading/loadingSlice';
 import { setParentProject, setOpenAddModifyTaskDialog } from '../../redux/dialogs/dialogSlice';
+
+import { APIWorker } from '../../services/axios';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -24,6 +26,21 @@ export function ProjectSection({section}){
     const handleClick = () => {
         setOpen(!open);
     }
+
+    const deleteSection = async() => {
+        dispatch(setLoadingPrompt("Processing your deletion request..."));
+        try{
+            if(!section || !section.id){
+                throw new Error("No section specified to delete");
+            }
+            const result = await APIWorker.callAPI('delete', `/main-business/v1/project-management/project/${parseInt(section.id)}`);
+            const { data } = result.data;
+        }catch(e){
+            console.log(e);
+            dispatch(setGlobalError("Section deletion request encountered an error ~"));
+        }
+        dispatch(setLoadingPrompt(null));
+    };
 
     return (
         <List className={classes.root} component={Paper} elevation={3}>     
@@ -42,14 +59,27 @@ export function ProjectSection({section}){
                         {section && section.name ? section.name : 'Project have no name' }
                     </Typography>
                 </ListItemText>
-                <Tooltip title="Add task">
-                    <IconButton onClick={() => {
-                        dispatch(setParentProject(section));
-                        dispatch(setOpenAddModifyTaskDialog(true));
-                    }}>
-                        <AddCommentOutlined/>
-                    </IconButton>
-                </Tooltip>
+                <Grid style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    flexWrap: 'wrap'
+                }}>
+                    <Tooltip title="Add task">
+                        <IconButton onClick={() => {
+                            dispatch(setParentProject(section));
+                            dispatch(setOpenAddModifyTaskDialog(true));
+                        }}>
+                            <AddCommentOutlined/>
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Remove section">
+                        <IconButton onClick={() => {
+                            deleteSection();
+                        }}>
+                            <RemoveCircle/>
+                        </IconButton>
+                    </Tooltip>
+                </Grid>
             </ListItem>
             {/* all the children tasks goes here */}
             <Collapse in={open} timeout="auto" unmountOnExit>

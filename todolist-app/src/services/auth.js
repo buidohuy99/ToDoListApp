@@ -124,7 +124,7 @@ export function AuthProvider({children}){
     };
 
     const recheckAccessToken = async() => {
-        if(signalR.state === SR.HubConnectionState.Disconnected || signalR.state === SR.HubConnectionState.Disconnecting) {
+        if(signalR.state === SR.HubConnectionState.Disconnected) {
             return;
         }
         let existingToken = localStorage.getItem(accesstoken_keyname);

@@ -130,7 +130,7 @@ function ProjectsGrid({width}){
                 updateGridStatus(data.projects);
             }
         });
-    }, [searchString, maxProjectPerPage, currentPage]);
+    }, [searchString, maxProjectPerPage, currentPage, isUnmounted]);
 
     return (
     <React.Fragment>
