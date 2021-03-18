@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Grid, Paper, ListItem, ListItemIcon, ListItemText, ListItemSecondaryAction, makeStyles, IconButton, Typography, Checkbox, Tooltip, useTheme } from '@material-ui/core';
+import { Grid, Paper, ListItem, ListItemIcon, ListItemText, InputBase, makeStyles, IconButton, Typography, Checkbox, Tooltip, useTheme, Button, ClickAwayListener, Fade } from '@material-ui/core';
 import { FiberManualRecord } from '@material-ui/icons';
 import { RemoveCircle, AssignmentInd, MoreHoriz } from '@material-ui/icons';
 
@@ -20,6 +20,14 @@ const useStyles = makeStyles((theme) => ({
     nested: {
         paddingLeft: theme.spacing(4),
     },
+    input: {
+        borderRadius: 10,
+        padding: 5,
+        fontSize: theme.typography.body2.fontSize,
+        "&:focus": {
+            border: `2px solid ${theme.palette.primary.main}`,
+        },
+    }
 }));
 
 export function TaskInProject({isNested, task}){
@@ -29,6 +37,9 @@ export function TaskInProject({isNested, task}){
     const { current_user } = useAuth();
 
     const [isDone, setTaskDone] = useState(task ? task.isDone : false);
+    const [taskName, setTaskName] = useState(task ? task.name : '');
+    const [isEditingOn, setIsEditingOn] = useState(false);
+    const [disableForm, setDisableForm] = useState(false);
 
     const canUserDoAssignment = useSelector((state) => state.projectDetail.canUserDoAssignment);
 
@@ -66,6 +77,26 @@ export function TaskInProject({isNested, task}){
             } 
             dispatch(setLoadingPrompt(null));
         }
+    }
+
+    const onDoneButtonClick = async () => {
+        setDisableForm(true);
+        setIsEditingOn(false);  
+        dispatch(setLoadingPrompt('Updating task...'));
+        try{
+            if(!task || !task.id){
+                throw new Error("Cannot update an inexistent task");
+            }
+            const result = await APIWorker.patchAPI(`/main-business/v1/task-management/task/${task.id}`, {
+                name: taskName
+            });  
+        }catch(e){
+            console.log(e);
+            dispatch(setGlobalError("Cannot update task name..."));
+        }
+        dispatch(setLoadingPrompt(null));
+        setTaskName('');
+        setDisableForm(false);
     }
 
     useEffect(() => {
@@ -113,13 +144,32 @@ export function TaskInProject({isNested, task}){
                     </Typography>
                 }
                 </Grid>
-                <Typography variant="body2" style={{
-                    fontStyle: task && task.name ? 'normal' : 'italic',
-                    overflowWrap: 'break-word',
-                    marginTop: 10,
-                }}>
-                    {task && task.name ? task.name : "This task is empty"}
-                </Typography>
+
+                <InputBase
+                    value={isEditingOn? taskName : task && task.name ? task.name : "This task is empty"}
+                    fullWidth
+                    multiline
+                    inputProps={{
+                        className: classes.input
+                    }}
+                    placeholder="Your task name goes here"
+                    onBlur={() => {
+                        onDoneButtonClick();
+                    }}
+                    onFocus={() => {
+                        const placeholder = task && task.name ? task.name : "";
+                        setIsEditingOn(true);
+                        setTaskName(placeholder);
+                    }}
+                    onChange={(e) => {
+                        e.target.value = e.target.value.slice(
+                            0,
+                            Math.min(100, e.target.value.length)
+                        );
+                        setTaskName(e.target.value);
+                    }}
+                    disabled={!task || !task.name || disableForm}>
+                </InputBase>
             </ListItemText>
 
             <Grid style={{

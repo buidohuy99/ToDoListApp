@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
-import { Paper, List, ListItem, ListItemIcon, ListItemText, Collapse, makeStyles, IconButton, Typography, Grid, Tooltip } from '@material-ui/core';
+import { Paper, List, ListItem, ListItemIcon, ListItemText, Collapse, makeStyles, IconButton, Typography, Grid, Tooltip, InputBase, ClickAwayListener, Button } from '@material-ui/core';
 import { ExpandMore, ExpandLess, AddCommentOutlined, RemoveCircle } from '@material-ui/icons';
 
 import { TaskInProject } from './TaskInProject';
@@ -15,6 +15,15 @@ const useStyles = makeStyles((theme) => ({
     root: {
       width: '100%'
     },
+    input: {
+        borderRadius: 10,
+        padding: 5,
+        fontSize: theme.typography.body2.fontSize,
+        "&:focus": {
+            border: `2px solid ${theme.palette.primary.main}`,
+        },
+        fontWeight: 'bold'
+    }
   }));
 
 export function ProjectSection({section}){
@@ -22,6 +31,10 @@ export function ProjectSection({section}){
     const dispatch = useDispatch();
 
     const [open, setOpen] = useState(false);
+
+    const [sectionName, setSectionName] = useState(section ? section.name : '');
+    const [isEditingOn, setIsEditingOn] = useState(false);
+    const [disableForm, setDisableForm] = useState(false);
 
     const handleClick = () => {
         setOpen(!open);
@@ -42,6 +55,26 @@ export function ProjectSection({section}){
         dispatch(setLoadingPrompt(null));
     };
 
+    const onDoneButtonClick = async () => {
+        setDisableForm(true);
+        setIsEditingOn(false);  
+        dispatch(setLoadingPrompt('Updating section...'));
+        try{
+            if(!section || !section.id){
+                throw new Error("Cannot update an inexistent section");
+            }
+            const result = await APIWorker.patchAPI(`/main-business/v1/project-management/project/${section.id}`, {
+                name: sectionName
+            });  
+        }catch(e){
+            console.log(e);
+            dispatch(setGlobalError("Cannot update section name..."));
+        }
+        dispatch(setLoadingPrompt(null));
+        setSectionName('');
+        setDisableForm(false);
+    }
+
     return (
         <List className={classes.root} component={Paper} elevation={3}>     
             <ListItem>
@@ -51,13 +84,31 @@ export function ProjectSection({section}){
                     </IconButton>
                 </ListItemIcon>
                 <ListItemText>
-                    <Typography variant="body2" style={{
-                        fontWeight: section && section.name ? 'bold' : 'normal',
-                        fontStyle: section && section.name ? 'normal' : 'italic',
-                        overflowWrap: 'break-word',
-                    }}>
-                        {section && section.name ? section.name : 'Project have no name' }
-                    </Typography>
+                    <InputBase
+                        value={isEditingOn? sectionName : section && section.name ? section.name : "This section is empty"}
+                        fullWidth
+                        multiline
+                        inputProps={{
+                            className: classes.input,
+                        }}
+                        placeholder="Your section name goes here"
+                        onBlur={() => {
+                            onDoneButtonClick();
+                        }}
+                        onFocus={() => {
+                            const placeholder = section && section.name ? section.name : "";
+                            setIsEditingOn(true);
+                            setSectionName(placeholder);
+                        }}
+                        onChange={(e) => {
+                            e.target.value = e.target.value.slice(
+                                0,
+                                Math.min(100, e.target.value.length)
+                            );
+                            setSectionName(e.target.value);
+                        }}
+                        disabled={!section || !section.name || disableForm}>
+                    </InputBase>
                 </ListItemText>
                 <Grid style={{
                     display: 'flex',

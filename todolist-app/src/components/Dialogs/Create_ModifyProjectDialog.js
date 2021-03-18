@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useHistory } from 'react-router';
 
 import { APIWorker } from '../../services/axios';
 
@@ -11,6 +12,7 @@ import { setCurrentModifyingProject, setOpenCreateModifyProjectDialog, setParent
 
 export function Create_ModifyProjectDialog({open}){
     const dispatch = useDispatch();
+    const history = useHistory();
 
     const [disableForm, setDisableForm] = useState(false);
     const [error, setError] = useState(null);
@@ -76,7 +78,11 @@ export function Create_ModifyProjectDialog({open}){
                             parentId: parentProjectOfDialog && parentProjectOfDialog.id && Number.isInteger(parentProjectOfDialog.id) ? parseInt(parentProjectOfDialog.id) : undefined
                         });
 
-                        const { data } = newProject.data;    
+                        const { data } = newProject.data;  
+                        
+                        if(!data.parent){
+                            history.push(`/project/${data.id}`);
+                        }
                     }else{
                         if(!projectToModify.id || !Number.isInteger(projectToModify.id)){
                             throw new Error("Item to modify have invalid id");
