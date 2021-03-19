@@ -121,7 +121,6 @@ export function Login(props){
               id="username"
               label="Username/Email"
               name="username"
-              autoComplete="username"
               onChange={(e) => {
                 e.target.value = e.target.value.slice(0,Math.min(40, e.target.value.length));
                 setUsername(e.target.value);
@@ -138,7 +137,6 @@ export function Login(props){
               label="Password"
               type="password"
               id="password"
-              autoComplete="current-password"
               onChange={(e) => {
                 e.target.value = e.target.value.slice(0,Math.min(100, e.target.value.length));
                 setPassword(e.target.value);

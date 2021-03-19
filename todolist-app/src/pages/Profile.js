@@ -47,17 +47,17 @@ export function Profile(){
     }, []);
 
     const postChangeProfileForm = async () => {
-        if(firstName && firstName.length <= 0) {
+        if(!firstName) {
             setIsError("Your new first name is illegal");
             setDisableForm(false);
             return;
         }
-        if(lastName && lastName.length <= 0) {
+        if(!lastName) {
             setIsError("Your new last name is illegal");
             setDisableForm(false);
             return;
         }
-        if(phoneNumber && phoneNumber.length <= 0) {
+        if(!phoneNumber) {
             setIsError("Your new phone number is illegal");
             setDisableForm(false);
             return;
@@ -206,6 +206,7 @@ export function Profile(){
                         <Grid item xs={6} >
                             <TextField
                                 variant="outlined"
+                                autoComplete='off'
                                 fullWidth
                                 id="firstName"
                                 label="First Name"
@@ -221,6 +222,7 @@ export function Profile(){
                         <Grid item xs={6} >
                             <TextField
                                 variant="outlined"
+                                autoComplete='off'
                                 fullWidth
                                 id="lastName"
                                 label="Last Name"
@@ -236,6 +238,7 @@ export function Profile(){
                         <Grid item xs={12} >
                             <TextField
                                 variant="outlined"
+                                autoComplete='off'
                                 fullWidth
                                 id="phoneNumber"
                                 label="Phone"
@@ -252,12 +255,12 @@ export function Profile(){
                         <Grid item xs={12}>
                             <TextField
                                 variant="outlined"
+                                autoComplete='off'
                                 fullWidth
                                 name="password"
                                 label={isEditOn ?  "Current password" : "Password"}
                                 type={isEditOn ? "password" : undefined}
                                 id="password"
-                                autoComplete="current-password"
                                 onChange={(e) => {
                                 e.target.value = e.target.value.slice(0,Math.min(100, e.target.value.length));
                                     setPassword(e.target.value);
@@ -273,12 +276,12 @@ export function Profile(){
                             {isEditOn ? 
                             <TextField
                                 variant="outlined"
+                                autoComplete='off'
                                 fullWidth
                                 name="passwordNew"
                                 label="Type your new password"
                                 type="password"
                                 id="passwordNew"
-                                autoComplete="new-password"
                                 onChange={(e) => {
                                     e.target.value = e.target.value.slice(0,Math.min(100, e.target.value.length));
                                     setNewPassword(e.target.value);

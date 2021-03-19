@@ -187,7 +187,6 @@ const useStyles = makeStyles((theme) => ({
                 <TextField
                   onChange={(e) => handleChange(e, setFirstNameValue)}
                   value={firstNameValue ? firstNameValue : ""}
-                  autoComplete="fname"
                   name="firstName"
                   variant="outlined"
                   required
